@@ -1,0 +1,41 @@
+.homepage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 5vw 10rem;
+  row-gap: 1.2rem;
+  width: 100vw;
+}
+
+.container {
+  max-width: 90rem;
+}
+
+.intro .bodyText {
+  text-align: center;
+  font-size: 2rem;
+  text-wrap: pretty;
+}
+
+.bodyText > * {
+  margin: 0.3rem 0;
+}
+
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.2rem;
+}
+
+.homepage h1 {
+  margin: 1rem 0;
+}
+
+.contactOptions {
+  justify-self: flex-start;
+}
+
+.contactOptions li {
+  list-style-type: none;
+}
