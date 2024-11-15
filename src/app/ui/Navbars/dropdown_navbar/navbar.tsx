@@ -49,9 +49,9 @@ export default function Navbar() {
 
   //Closes the menu
   function closeMenu() {
-    setMenuOpen(false);
     setMenuClosing(true);
     setTimeout(() => {
+      setMenuOpen(false);
       setMenuClosing(false);
     }, 150);
   }
