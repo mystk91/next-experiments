@@ -6,202 +6,21 @@ import styles from "./navbar.module.css";
 import { usePathname } from "next/navigation";
 import classNames from "classnames";
 import { createFocusTrap } from "focus-trap";
+import SearchBar from "../searchBars/searchBar";
 
-const navItems: NavItem[] = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Forum", href: "/forum" },
-  {
-    label: "Store",
-    links: [
-      {
-        label: "Food",
-        links: [
-          {
-            label: "Meat",
-            links: [
-              { label: "Beef", href: "/store/food/meat/beef" },
-              { label: "Chicken", href: "/store/food/meat/chicken" },
-              { label: "Pork", href: "/store/food/meat/pork" },
-              { label: "Turkey", href: "/store/food/meat/turkey" },
-              {
-                label: "Specialty",
-                href: "/store/food/meat/specialty",
-              },
-            ],
-          },
-          {
-            label: "Seafood",
-            links: [
-              { label: "Fillets", href: "/store/food/seafood/fillets" },
-              { label: "Salmon", href: "/store/food/seafood/salmon" },
-              { label: "Tuna", href: "/store/food/seafood/tuna" },
-              { label: "Shrimp", href: "/store/food/seafood/shrimp" },
-              {
-                label: "Shellfish",
-                href: "/store/food/seafood/shellfish",
-              },
-              {
-                label: "Specialty",
-                href: "/store/food/seafood/specialty",
-              },
-            ],
-          },
-          { label: "Fruits", href: "/store/food/fruits" },
-          { label: "Vegetables", href: "/store/food/vegetables" },
-          { label: "Deli", href: "/store/food/deli" },
-          { label: "Bakery", href: "/store/food/bakery" },
-          { label: "Snacks", href: "/store/food/snacks" },
-          { label: "Frozen", href: "/store/food/frozen" },
-        ],
-      },
-      {
-        label: "Drinks",
-        links: [
-          { label: "Milk", href: "/store/drinks/milk" },
-          { label: "Juice", href: "/store/drinks/juice" },
-          { label: "Tea", href: "/store/drinks/tea" },
-          { label: "Coffee", href: "/store/drinks/coffee" },
-          {
-            label: "Soft Drinks",
-            href: "/store/drinks/soft-drinks",
-          },
-        ],
-      },
-      { label: "Clothes", href: "/store/clothes" },
-      { label: "Electronics", href: "/store/electronics" },
-      { label: "Pharmacy", href: "/store/pharmacy" },
-    ],
-  },
-  {
-    label: "Games",
-    links: [
-      { label: "Action", href: "/games/action" },
-      { label: "Arcade", href: "/games/arcade" },
-      { label: "Platformer", href: "/games/platformer" },
-      { label: "Puzzle", href: "/games/puzzle" },
-      { label: "Roleplaying", href: "/games/roleplaying" },
-      { label: "Strategy", href: "/games/strategy" },
-    ],
-  },
-  { label: "Contact", href: "/contact" },
-  { label: "Extras", href: "/extras" },
-  { label: "Login", href: "/login" },
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/forum", label: "Forum" },
+  { href: "/games", label: "Games" },
+  { href: "/store", label: "Store" },
 ];
 
 //Breakpoint for media query
-const breakpoint = 800;
-
-interface NavItem {
-  label: string;
-  href?: string;
-  links?: NavItem[];
-}
-
-interface NavItemProps {
-  navItem: NavItem;
-}
-
-//Creates one NavItem thats on the navbar menu, lets us have descending menus through recursion
-function NavItem({ navItem }: NavItemProps): JSX.Element {
-  const arrow = (
-    <svg
-      className={styles.menuArrow}
-      xmlns="http://www.w3.org/2000/svg"
-      xmlSpace="preserve"
-      viewBox="0 0 122.88 122.88"
-    >
-      <path d="M0 0h30.82l49.773 61.44-49.773 61.44H0l49.772-61.44L0 0z" />
-    </svg>
-  );
-  const [submenuOpen, setSubmenuOpen] = useState<boolean>(false);
-  const pathName: string = usePathname();
-  const componentRef = useRef<HTMLLIElement | null>(null);
-
-  // Closes submenu if not clicked on
-  const handleClick = useCallback((e: MouseEvent) => {
-    if (
-      componentRef.current &&
-      !componentRef.current.contains(e.target as Node)
-    ) {
-      setSubmenuOpen(false);
-    }
-  }, []);
-
-  // Add/remove event listeners
-  useEffect(() => {
-    const windowWidth = window.innerWidth;
-    window.addEventListener("resize", handleResize);
-    function handleResize() {
-      // Closes the menu if window passes the breakpoint either way
-      if (
-        (window.innerWidth > breakpoint && windowWidth <= breakpoint) ||
-        (window.innerWidth < breakpoint && windowWidth >= breakpoint)
-      )
-        setSubmenuOpen(false);
-    }
-    submenuOpen
-      ? document.addEventListener("click", handleClick, true)
-      : document.removeEventListener("click", handleClick, true);
-    return () => {
-      document.removeEventListener("click", handleClick, true);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [submenuOpen]);
-
-  return navItem.href ? (
-    <li
-      ref={componentRef}
-      className={classNames(styles.navItem, {
-        [styles.active]: pathName === navItem.href,
-      })}
-    >
-      <Link href={navItem.href}>{navItem.label}</Link>
-    </li>
-  ) : !submenuOpen ? (
-    <li
-      ref={componentRef}
-      className={classNames(styles.navItem, {
-        [styles.active]: pathName === navItem.href,
-      })}
-    >
-      <button
-        className={styles.submenuButton}
-        onClick={() => {
-          setSubmenuOpen(!submenuOpen);
-        }}
-      >
-        <div>{navItem.label}</div>
-        <div className={styles.menuArrowClosed}>{arrow}</div>
-      </button>
-    </li>
-  ) : (
-    <li
-      ref={componentRef}
-      className={classNames(styles.navItem, {
-        [styles.active]: pathName === navItem.href,
-      })}
-    >
-      <button
-        className={styles.submenuButton}
-        onClick={() => {
-          setSubmenuOpen(!submenuOpen);
-        }}
-      >
-        <div>{navItem.label}</div>
-        <div className={styles.menuArrowOpen}>{arrow}</div>
-      </button>
-      <ul className={classNames(styles.navMenu)}>
-        {navItem.links &&
-          navItem.links.map((item) => (
-            <NavItem key={item.label + item.href} navItem={item} />
-          ))}
-      </ul>
-    </li>
-  );
-}
+const breakpoint = 720;
 
 export default function Navbar() {
+  const pathName: string = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -274,33 +93,47 @@ export default function Navbar() {
 
   return (
     <nav className={styles.navbar} aria-label="Main">
-      <button
-        className={styles.menuButton}
-        onClick={toggleMenu}
-        aria-label="Toggle Menu"
-        aria-expanded={menuOpen ? "true" : "false"}
-      >
-        {menuIcon}
-      </button>
-      <div
-        className={classNames(
-          styles.navMenuContainer,
-          { [styles.open]: menuOpen },
-          { [styles.closing]: menuClosing }
-        )}
-      >
-        <ul
-          ref={menuRef}
+      <div className={styles.navbarLeft}>
+        <button
+          className={styles.menuButton}
+          onClick={toggleMenu}
+          aria-label="Toggle Menu"
+          aria-expanded={menuOpen ? "true" : "false"}
+        >
+          {menuIcon}
+        </button>
+        <div
           className={classNames(
-            styles.navMenu,
+            styles.navMenuContainer,
             { [styles.open]: menuOpen },
             { [styles.closing]: menuClosing }
           )}
         >
-          {navItems.map((item) => (
-            <NavItem key={item.label + item.href} navItem={item} />
-          ))}
-        </ul>
+          <ul
+            ref={menuRef}
+            className={classNames(
+              styles.navMenu,
+              { [styles.open]: menuOpen },
+              { [styles.closing]: menuClosing }
+            )}
+          >
+            {navLinks.map(({ href, label }) => (
+              <li
+                key={href}
+                className={classNames(styles.navItem, {
+                  [styles.active]: pathName === href,
+                  [styles.open]: menuOpen,
+                  [styles.closing]: menuClosing,
+                })}
+              >
+                <Link href={href}>{label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className={styles.navbarRight}>
+        <SearchBar />
       </div>
     </nav>
   );

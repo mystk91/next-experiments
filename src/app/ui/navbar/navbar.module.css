@@ -1,6 +1,7 @@
 .navbar {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
+  align-items: center;
   width: 100vw;
   min-height: 5.6rem;
   background: radial-gradient(
@@ -13,12 +14,14 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  text-shadow: 0rem 0rem 0.1rem #000000;
+}
+ 
+.navbarLeft, .navbarRight {
+  flex: 1;
 }
 
-.navbar button:focus {
-  outline: 1px solid #005fcc;
-  border-radius: 2px;
+.navbarRight{
+  margin: 0 0.8rem;
 }
 
 .navMenu {
@@ -26,18 +29,17 @@
   justify-content: center;
 }
 
-.navItem,
-.navItem button {
+.navItem {
+  min-width: 11.2rem;
   min-width: 8.8rem;
-  width: 10rem;
+  width: 9rem;
   height: 5.6rem;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   border-left: 0.05rem solid black;
   font-weight: 600;
   background-color: rgb(140, 95, 139);
   color: rgb(255, 255, 255);
   list-style: none;
-  text-align: center;
 }
 
 .navItem:last-child {
@@ -45,11 +47,7 @@
 }
 
 .navItem:hover {
-  filter: brightness(1.2);
-}
-
-.navItem .navItem:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.4);
 }
 
 .navItem > a {
@@ -58,6 +56,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  text-shadow: 0px 0px 0.1rem #000000;
 }
 
 .active {
@@ -68,49 +67,7 @@
   display: none;
 }
 
-.navItem button {
-  all: unset;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  column-gap: 0.6rem;
-  height: 100%;
-  width: 100%;
-  cursor: pointer;
-}
-
-.navMenu .navMenu {
-  display: flex;
-  flex-direction: column;
-}
-
-.navMenu .navMenu .navItem {
-  font-size: 1.6rem;
-  border: 0.05rem solid rgb(40, 40, 40);
-}
-
-.navMenu .navMenu .navMenu {
-  position: absolute;
-  transform: translateX(9.9rem) translateY(-4rem);
-}
-
-.menuArrow {
-  fill: white;
-  height: 1rem;
-  width: 1rem;
-}
-
-.menuArrowClosed {
-  transform: rotateZ(0deg);
-  transition: transform 0.1s;
-}
-
-.menuArrowOpen {
-  transform: rotateZ(90deg) translateX(0.3rem);
-  transition: transform 0.1s;
-}
-
-@media (max-width: 800px) {
+@media (max-width: 720px) {
   /* This must be in global styles using modules
   .menu-open {
     overflow: hidden; 
@@ -139,7 +96,6 @@
     position: fixed;
     width: 100vw;
     height: 100vh;
-    overflow-y: scroll;
     top: 0;
     left: 0;
     display: flex;
@@ -152,80 +108,18 @@
     transition: background-color 0.1s;
   }
 
-  .navMenuContainer > .navMenu {
-    min-height: 100vh;
-    height: max-content;
-  }
-
   .navMenu {
     flex-direction: column;
     position: fixed;
     top: 0;
     left: -18rem;
-    height: max-content;
+    height: 100vh;
     padding-top: 10vh;
-    padding-bottom: 20vh;
     border-right: 0.05rem solid black;
     justify-content: flex-start;
     background-color: rgb(140, 95, 139);
     opacity: 1;
     visibility: hidden;
-  }
-
-  .navMenuContainer.open .navMenu {
-    position: relative;
-  }
-
-  .navMenu .navMenu {
-    all: unset;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    height: max-content;
-    padding-top: 0;
-    background-color: rgb(140, 95, 139);
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .navItem {
-    display: flex;
-    flex-direction: column;
-    height: max-content;
-  }
-
-  .navItem > a {
-    height: 5.6rem;
-  }
-
-  .navItem button {
-    height: max-content;
-    min-height: 5.6rem;
-  }
-
-  .navItem .navItem {
-    width: 90%;
-    filter: brightness(1.1);
-    min-height: 3.6rem;
-    align-self: center;
-  }
-
-  .navItem:hover {
-    filter: brightness(1.1);
-  }
-
-  .navItem .navItem:hover {
-    filter: brightness(1);
-  }
-
-  .navMenu .navMenu .navItem {
-    font-size: 1.6rem;
-    border: 0.05rem solid rgb(40, 40, 40);
-  }
-
-  .navMenu .navMenu .navMenu {
-    position: relative;
-    transform: translateX(0) translateY(0);
   }
 
   .navMenu.open {
@@ -243,17 +137,10 @@
     width: 18rem;
     border: none;
     border-top: 0.05rem solid black;
-    position: relative;
-  }
-
-  .navMenu.closing .navItem .navMenu {
-    left: -18rem;
-    transition: left 0.13s;
   }
 
   .navItem:last-child {
     border-bottom: 0.05rem solid black;
-    border-right: none;
   }
 
   .navItem.open {
@@ -266,7 +153,7 @@
 
   .menuIcon {
     height: 60%;
-    fill: white;
+    filter: invert();
     background-color: transparent;
     transition: transform 0.2s;
   }
