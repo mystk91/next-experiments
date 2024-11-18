@@ -6,7 +6,7 @@ import styles from "./navbar.module.css";
 import { usePathname } from "next/navigation";
 import classNames from "classnames";
 import { createFocusTrap } from "focus-trap";
-import SearchBar from "../searchBars/searchBar";
+import SearchBar from "../searchBar/searchBar";
 
 const navLinks = [
   { href: "/", label: "Home" },
