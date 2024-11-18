@@ -10,6 +10,7 @@ import React, {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "./searchBar.module.css";
+import { debounce } from "lodash";
 
 const searchIcon = (
   <svg
@@ -39,9 +40,16 @@ export default function SearchBar() {
     }
   }, []);
 
+  //Debounce for autocomplete suggestions
+  const debounceUpdateSuggestions = useCallback(
+    debounce(() => updateSuggestions(), 250),
+    [formData.search]
+  );
+
   //Updates the suggestions after user types
   useEffect(() => {
-    updateSuggestions();
+    debounceUpdateSuggestions();
+    return debounceUpdateSuggestions.cancel;
   }, [formData]);
 
   //Adds a click-off to suggestions
@@ -75,7 +83,11 @@ export default function SearchBar() {
         const data = await res.json();
         if (data.suggestions) {
           setSuggestions(
-            <ul className={styles.suggestions}>
+            <ul
+              className={styles.suggestions}
+              role="listbox"
+              aria-label="Search suggestions"
+            >
               {data.suggestions.map(
                 ({ label, href }: { label: string; href: string }) => (
                   <li key={href} className={styles.suggestion}>
