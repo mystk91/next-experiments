@@ -11,6 +11,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "./searchBar.module.css";
 import { debounce } from "lodash";
+import { useClickOff } from "@/app/hooks/useClickOff";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
+import { useFocus } from "@/app/hooks/useFocus";
+import classNames from "classnames";
+import { useFormUpdater } from "@/app/hooks/useFormUpdater";
 
 const searchIcon = (
   <svg
@@ -23,50 +28,70 @@ const searchIcon = (
   </svg>
 );
 
+const leftArrow = (
+  <svg
+    className={styles.arrowIcon}
+    xmlns="http://www.w3.org/2000/svg"
+    fillRule="evenodd"
+    clipRule="evenodd"
+    imageRendering="optimizeQuality"
+    shapeRendering="geometricPrecision"
+    textRendering="geometricPrecision"
+    viewBox="0 0 512 404.43"
+  >
+    <path
+      fillRule="nonzero"
+      d="m68.69 184.48 443.31.55v34.98l-438.96-.54 173.67 159.15-23.6 25.79L0 199.94 218.6.02l23.6 25.79z"
+    />
+  </svg>
+);
+
 // A basic search bar
 export default function SearchBar() {
-  // State for form data and errors
-  const [formData, setFormData] = useState({ search: "" });
-  const [suggestions, setSuggestions] = useState<JSX.Element | null>(null);
+  //Refs
   const componentRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Removes suggestions if components not clicked on
-  const handleClick = useCallback((e: MouseEvent) => {
-    if (
-      componentRef.current &&
-      !componentRef.current.contains(e.target as Node)
-    ) {
-      setSuggestions(null);
-    }
-  }, []);
+  //Mobile Menu
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // State for search form data
+  const [formData, setFormData] = useState({ search: "" });
+  const handleChange = useFormUpdater(setFormData);
+
+  //Search suggestions that appear below searchbar
+  const [suggestions, setSuggestions] = useState<JSX.Element | null>(null);
+
+  // Removes suggestions if input isn't clicked on
+  useClickOff({
+    ref: inputRef,
+    onClickOff: () => setSuggestions(null),
+    active: suggestions !== null,
+  });
+
+  //Closes the mobile menu if component isn't clicked on
+  useClickOff({
+    ref: componentRef,
+    onClickOff: () => setMenuOpen(false),
+    active: menuOpen,
+  });
+
+  //Give focus to the input when you open the mobile menu
+  useFocus({
+    ref: inputRef,
+    active: menuOpen,
+  });
 
   //Debounce for autocomplete suggestions
   const debounceUpdateSuggestions = useCallback(
     debounce(() => updateSuggestions(), 250),
     [formData.search]
   );
-
   //Updates the suggestions after user types
   useEffect(() => {
     debounceUpdateSuggestions();
     return debounceUpdateSuggestions.cancel;
   }, [formData]);
-
-  //Adds a click-off to suggestions
-  useEffect(() => {
-    suggestions
-      ? document.addEventListener("click", handleClick, true)
-      : document.removeEventListener("click", handleClick, true);
-    return () => {
-      document.removeEventListener("click", handleClick, true);
-    };
-  }, [suggestions]);
-
-  // Handle input changes
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  }
 
   //Update the autocomplete suggesstions
   async function updateSuggestions() {
@@ -114,30 +139,67 @@ export default function SearchBar() {
   //Sends user to our search page with their query
   function search(e: React.FormEvent) {
     e.preventDefault();
+    setSuggestions(null);
     if (formData.search.trim()) {
       redirect(`/search?q=${encodeURIComponent(formData.search)}`);
     }
   }
 
   return (
-    <div className={styles.searchBar} ref={componentRef}>
-      <form className={styles.searchForm} onSubmit={search}>
-        <input
-          className={styles.password}
-          name="search"
-          type="input"
-          maxLength={256}
-          value={formData.search}
-          onChange={handleChange}
-          placeholder="Search"
-          aria-label="Search"
-          onClick={updateSuggestions}
-        />
-        <button type="submit" role="submit" aria-label="Search">
-          {searchIcon}
+    <div
+      className={classNames(styles.searchBar, { [styles.menuOpen]: menuOpen })}
+      ref={componentRef}
+    >
+      <button
+        className={classNames(styles.openButton, {
+          [styles.menuOpen]: menuOpen,
+        })}
+        aria-label="Open Search Menu"
+        onClick={() => {
+          setMenuOpen(true);
+        }}
+      >
+        {searchIcon}
+      </button>
+      <div
+        className={classNames(styles.searchMenuContainer, {
+          [styles.menuOpen]: menuOpen,
+        })}
+      >
+        <button
+          className={classNames(styles.closeButton, {
+            [styles.menuOpen]: menuOpen,
+          })}
+          aria-label="Close Search Menu"
+          onClick={() => {
+            setMenuOpen(false);
+            setSuggestions(null);
+          }}
+        >
+          {leftArrow}
         </button>
-      </form>
-      {suggestions}
+        <form
+          className={styles.searchForm}
+          onSubmit={search}
+          onFocus={() => setMenuOpen(true)}
+          onChange={handleChange}
+        >
+          <input
+            ref={inputRef}
+            name="search"
+            type="input"
+            maxLength={256}
+            value={formData.search}
+            placeholder="Search"
+            aria-label="Search"
+            onFocus={updateSuggestions}
+          />
+          <button type="submit" role="submit" aria-label="Search">
+            {searchIcon}
+          </button>
+          {suggestions}
+        </form>
+      </div>
     </div>
   );
 }

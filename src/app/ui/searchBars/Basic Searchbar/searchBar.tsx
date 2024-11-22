@@ -123,7 +123,6 @@ export default function SearchBar() {
     <div className={styles.searchBar} ref={componentRef}>
       <form className={styles.searchForm} onSubmit={search}>
         <input
-          className={styles.password}
           name="search"
           type="input"
           maxLength={256}

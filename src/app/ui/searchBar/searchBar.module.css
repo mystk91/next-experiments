@@ -5,6 +5,10 @@
   min-width: 13.5rem;
 }
 
+.searchMenuContainer {
+  height: 4rem;
+}
+
 .searchBar:focus {
   outline: 3px solid #005fcc;
 }
@@ -13,6 +17,7 @@
   display: flex;
   border-radius: 20px;
   height: 100%;
+  position: relative;
 }
 
 .searchForm input {
@@ -28,7 +33,6 @@
 .searchForm input:focus {
   outline: none;
   box-shadow: 0 0 0 0.15rem #004595;
-  border-right: 0.15rem solid #004595;
 }
 
 .searchForm button {
@@ -42,7 +46,7 @@
   border-radius: 0 2rem 2rem 0;
 }
 
-.searchForm button:focus {
+.searchBar button:focus {
   filter: brightness(0.9);
   box-shadow: 0 0 0 0.15rem #004595;
 }
@@ -62,6 +66,8 @@ button .searchIcon {
   flex-direction: column;
   margin-left: 2rem;
   width: calc(100% - 5.4rem - 2.1rem);
+  position: absolute;
+  top: 100%;
 }
 
 .suggestion {
@@ -109,9 +115,89 @@ button .searchIcon {
   min-width: max-content;
 }
 
+.openButton,
+.closeButton {
+  display: none;
+}
+
 @media (prefers-color-scheme: dark) {
 }
 
 /* Mobile Styles */
-@media screen and (max-width: 650px) {
+@media screen and (max-width: 720px) {
+  .searchBar {
+    display: flex;
+    min-width: 0rem;
+  }
+
+  .searchBar.menuOpen {
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    min-width: 100vw;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+    background-color: rgb(91, 64, 91);
+    z-index: 1;
+  }
+
+  .searchMenuContainer {
+    display: none;
+  }
+
+  .searchMenuContainer.menuOpen {
+    display: flex;
+    justify-content: center;
+    column-gap: 1.2rem;
+    padding: 0 4vw;
+  }
+
+  button .arrowIcon {
+    height: 50%;
+    width: auto;
+    fill: black;
+  }
+
+  .openButton {
+    all: unset;
+    cursor: pointer;
+    background-color: rgb(255, 255, 255);
+    min-width: 4.8rem;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1.5rem;
+  }
+
+  .openButton.menuOpen {
+    display: none;
+  }
+
+  .openButton:hover {
+    filter: brightness(0.95);
+  }
+
+  .closeButton {
+    all: unset;
+    cursor: pointer;
+    background-color: rgb(255, 255, 255);
+    min-width: 4.8rem;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1.5rem;
+  }
+
+  .closeButton:hover {
+    filter: brightness(0.95);
+  }
 }
