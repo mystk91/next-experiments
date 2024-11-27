@@ -21,10 +21,6 @@
   flex: 1;
 }
 
-.navbarRight {
-  margin: 0 0.8rem;
-}
-
 @media (max-width: 720px) {
   .navbarLeft,
   .navbarRight {
