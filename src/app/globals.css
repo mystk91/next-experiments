@@ -1,8 +1,60 @@
 @import "~normalize.css/normalize.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --pageBackground: white;
+  --background: white;
+  --foreground: black;
+  --borderColor: rgb(50, 50, 50);
+  --smallBorder: 0.5px solid var(--borderColor);
+  --buttonBackground: rgb(240, 240, 240);
+  --buttonHoverColor: rgb(220, 220, 220);
+  --modalBackdropColor: rgba(0, 0, 0, 0.4);
+  --linkColor: blue;
+  --iconColor: black;
+  --inputBackground: white;
+  --errorColor: brown;
+  color: var(--foreground);
+}
+
+input {
+  color: var(--foreground);
+}
+
+input::placeholder {
+  color: var(--foreground);
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pageBackground: rgb(30, 30, 30);
+    --background: rgb(50, 50, 50);
+    --foreground: white;
+    --borderColor: white;
+    --smallBorder: 0.5px solid var(--borderColor);
+    --buttonBackground: rgb(80, 80, 80);
+    --buttonHoverColor: rgb(95, 95, 95);
+    --modalBackdropColor: rgba(0, 0, 0, 0.2);
+    --iconColor: white;
+    --linkColor: rgb(170, 170, 255);
+    --inputBackground: rgba(40, 40, 40);
+    --errorColor: rgb(249, 105, 105);
+    color: var(--foreground);
+  }
+
+  input {
+    color: var(--foreground);
+  }
+
+  input::placeholder {
+    color: var(--foreground);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
 }
 
 /* Fonts*/
@@ -164,19 +216,5 @@ a {
 }
 
 .menu-open {
-  overflow: hidden; 
-}
-
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+  overflow: hidden;
 }

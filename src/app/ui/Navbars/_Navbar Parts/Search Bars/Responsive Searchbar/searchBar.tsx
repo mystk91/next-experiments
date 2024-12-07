@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import styles from "./searchBar.module.css";
 import { debounce } from "lodash";
 import { useClickOff } from "@/app/hooks/useClickOff";
+import { useBreakpoint } from "@/app/hooks/useBreakpoint";
 import { useFocus } from "@/app/hooks/useFocus";
 import classNames from "classnames";
 import { useFormUpdater } from "@/app/hooks/useFormUpdater";

@@ -1,0 +1,34 @@
+@media (prefers-color-scheme: dark) {
+}
+
+.arrow {
+  width: auto;
+}
+
+.open .arrow {
+  transform: rotateX(180deg);
+  transition: transform 0.1s;
+}
+
+.closed .arrow {
+  transform: rotateX(0deg) translateY(0.3125rem);
+  transition: transform 0.1s;
+}
+
+.accordian button {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+}
+
+.accordian button * {
+  margin: 0 2rem;
+}
+
+.accordian button:hover {
+  filter: brightness(0.96);
+}
