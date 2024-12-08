@@ -6,22 +6,34 @@
   --foreground: black;
   --borderColor: rgb(50, 50, 50);
   --smallBorder: 0.5px solid var(--borderColor);
-  --buttonBackground: rgb(240, 240, 240);
+  --buttonBackground: rgb(230, 230, 230);
   --buttonHoverColor: rgb(220, 220, 220);
   --modalBackdropColor: rgba(0, 0, 0, 0.4);
   --linkColor: blue;
   --iconColor: black;
   --inputBackground: white;
   --errorColor: brown;
+  --navbarBackground: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  --navbarBackgroundColor: rgb(91, 64, 91);
   color: var(--foreground);
 }
 
 input {
   color: var(--foreground);
+  background-color: var(--background);
 }
 
 input::placeholder {
   color: var(--foreground);
+}
+
+svg {
+  fill: var(--iconColor);
 }
 
 /* Dark Mode */
@@ -44,10 +56,15 @@ input::placeholder {
 
   input {
     color: var(--foreground);
+    background-color: var(--background);
   }
 
   input::placeholder {
     color: var(--foreground);
+  }
+
+  svg {
+    fill: var(--iconColor);
   }
 }
 
@@ -184,7 +201,7 @@ body {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: var(--pageBackground);
   font-family: Figtree, Inter, sans-serif;
   font-size: 1.6rem;
   -webkit-font-smoothing: antialiased;
@@ -213,8 +230,4 @@ nav {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-.menu-open {
-  overflow: hidden;
 }

@@ -69,12 +69,6 @@
 }
 
 @media (max-width: 720px) {
-  /* This must be in global styles using modules
-  .menu-open {
-    overflow: hidden; 
-  }
-  */
-
   .navbarLeft,
   .navbarRight {
     flex: none;

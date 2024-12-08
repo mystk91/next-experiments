@@ -46,8 +46,6 @@ const leftArrow = (
   </svg>
 );
 
-const breakpoint = 720;
-
 // A basic search bar
 export default function SearchBar() {
   const router = useRouter();
@@ -142,10 +140,6 @@ export default function SearchBar() {
     setSuggestions(null);
     if (formData.search.trim()) {
       router.push(`/search?q=${encodeURIComponent(formData.search)}`);
-      inputRef.current?.blur();
-      if (window.innerWidth > breakpoint) {
-        setMenuOpen(false);
-      }
     }
   }
 
