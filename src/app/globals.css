@@ -6,8 +6,10 @@
   --foreground: black;
   --borderColor: rgb(50, 50, 50);
   --smallBorder: 0.5px solid var(--borderColor);
+  --softBackground: rgb(245, 245, 245);
   --buttonBackground: rgb(230, 230, 230);
   --buttonHoverColor: rgb(220, 220, 220);
+  --buttonActiveColor: rgb(225, 225, 225);
   --modalBackdropColor: rgba(0, 0, 0, 0.4);
   --linkColor: blue;
   --iconColor: black;
@@ -21,6 +23,9 @@
   );
   --navbarBackgroundColor: rgb(91, 64, 91);
   color: var(--foreground);
+  --backgroundNumbers: 255, 255, 255;
+  --focusColor: rgba(47, 96, 149, 1);
+  --focusOutline: 0.1rem solid var(--focusColor);
 }
 
 input {
@@ -44,14 +49,17 @@ svg {
     --foreground: white;
     --borderColor: white;
     --smallBorder: 0.5px solid var(--borderColor);
+    --softBackground: rgb(95, 95, 95);
     --buttonBackground: rgb(80, 80, 80);
     --buttonHoverColor: rgb(95, 95, 95);
+    --buttonActiveColor: rgb(105, 105, 105);
     --modalBackdropColor: rgba(0, 0, 0, 0.2);
     --iconColor: white;
     --linkColor: rgb(170, 170, 255);
     --inputBackground: rgba(40, 40, 40);
     --errorColor: rgb(249, 105, 105);
     color: var(--foreground);
+    --backgroundNumbers: 50, 50, 50;
   }
 
   input {
