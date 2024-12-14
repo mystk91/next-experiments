@@ -6,7 +6,7 @@ import Card from "@/app/ui/Cards/Basic Card 1/card";
 
 export default function Page() {
   return (
-    <Carousel width="80vw" columnGap="1.2rem" >
+    <Carousel width="80vw" columnGap="1.2rem">
       <Card
         height="40.0rem"
         width="28.0rem"

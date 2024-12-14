@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import Image from "next/image";
 import styles from "./card.module.css";
+import Tooltip from "../../Tooltip/tooltip";
 
 interface CardProps {
   height: string;
@@ -29,6 +30,7 @@ export default function Card({
   description,
   button,
 }: CardProps) {
+  /*
   return (
     <div
       className={styles.card}
@@ -55,5 +57,14 @@ export default function Card({
         {button}
       </div>
     </div>
+  );
+  */
+  return (
+    <Tooltip
+      message="We made a tooltip thats very very very longer than a usual one"
+      direction="top"
+    >
+      <div></div>
+    </Tooltip>
   );
 }
