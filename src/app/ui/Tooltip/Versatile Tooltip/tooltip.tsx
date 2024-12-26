@@ -19,7 +19,6 @@ interface TooltipProps {
   children: React.ReactNode;
   message: string;
   direction: "top" | "right" | "bottom" | "left";
-  mouse?: boolean;
   offset?: number;
   delay?: number;
   fontSize?: number;
@@ -41,7 +40,6 @@ export default function Tooltip({
   children,
   message = "",
   direction = "bottom",
-  mouse = false,
   offset = 0.0,
   delay = 0,
   fontSize = 1.4,
@@ -61,9 +59,7 @@ export default function Tooltip({
   const [active, setActive] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState(0);
   const tooltipRef = useRef<null | HTMLDivElement>(null);
-  const childrenRef = useRef<null | HTMLDivElement>(null);
   const [appear, setAppear] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   function addTooltip() {
@@ -73,31 +69,13 @@ export default function Tooltip({
     setActive(true);
     timerRef.current = setTimeout(() => setAppear(true), 1 + delay);
   }
-  function removeTooltip(e: React.MouseEvent) {
-    if (!childrenRef.current) return;
-    const rect = childrenRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-      setAppear(false);
-      timerRef.current = setTimeout(() => setActive(false), 500);
-    }
-  }
 
-  function moveTooltip(e: React.MouseEvent) {
-    if (!childrenRef.current) return;
-    const rect = childrenRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    if (x >= 0 || x < rect.width || y >= 0 || y < rect.height) {
-      setMousePosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+  function removeTooltip() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
+    setAppear(false);
+    timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
   useEffect(() => {
@@ -206,14 +184,10 @@ export default function Tooltip({
           data-arrowposition={arrowPosition}
           role="tooltip"
           style={{
-            /*
             top: direction === "top" ? `-${tooltipOffset}rem` : "",
             right: direction === "right" ? `-${tooltipOffset}rem` : "",
             bottom: direction === "bottom" ? `-${tooltipOffset}rem` : "",
             left: direction === "left" ? `-${tooltipOffset}rem` : "",
-            */
-            top: mousePosition.y,
-            left: mousePosition.x,
             backgroundColor: backgroundColor,
             border: `${borderWidth}rem solid ${borderColor}`,
             borderRadius: `${borderRadius}rem`,
@@ -245,12 +219,7 @@ export default function Tooltip({
           </div>
         </div>
       )}
-      <div
-        ref={childrenRef}
-        onMouseOver={addTooltip}
-        onMouseMove={moveTooltip}
-        onMouseLeave={removeTooltip}
-      >
+      <div onMouseOver={addTooltip} onMouseLeave={removeTooltip}>
         {children}
       </div>
     </div>
