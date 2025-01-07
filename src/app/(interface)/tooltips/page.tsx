@@ -15,15 +15,15 @@ export default function Page() {
       }}
     >
       <Tooltip
-        message="This is a tooltip that follows our cursor"
-        direction="bottom"
-        mouse={true}
+        message="We can also make move our tooltip"
+        direction="left"
         borderRadius={0.8}
         borderWidth={0.1}
-        arrow={false}
-        arrowLength={1.2}
-        arrowWidth={0.6}
+        arrow={true}
+        arrowLength={2.0}
+        arrowWidth={0.8}
         arrowPosition="top"
+        shift="bottom"
       >
         <Card
           height="40.0rem"
