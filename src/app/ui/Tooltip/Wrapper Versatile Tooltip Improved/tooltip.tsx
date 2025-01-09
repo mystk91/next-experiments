@@ -60,9 +60,6 @@ export default function Tooltip({
   arrowWidth = 0.0,
 }: TooltipProps) {
   const [active, setActive] = useState(false);
-  const [tooltipOffset, setTooltipOffset] = useState(0);
-  const [tooltipShift, setTooltipShift] = useState(0);
-
   const [offsetStyles, setOffsetStyles] = useState({
     top: "",
     right: "",

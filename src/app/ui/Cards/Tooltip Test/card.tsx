@@ -9,7 +9,13 @@ import React, {
 } from "react";
 import Image from "next/image";
 import styles from "./card.module.css";
-import Tooltip from "../../Tooltip/tooltip";
+import Tooltip from "@/app/ui/Tooltip/Versatile Tooltip Improved/tooltip";
+import FollowTooltip from "@/app/ui/Tooltip/Follow Tooltip/tooltip";
+import HoverMenu from "@/app/ui/HoverMenus/HoverMenu/hoverMenu";
+import HoverMenuWrapper from "@/app/ui/HoverMenus/HoverMenu Wrapper/hoverMenuWrapper";
+import Banner from "@/app/ui/basic_banner/banner";
+import Accordian from "../../accordian/accordian";
+import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 
 interface CardProps {
   height: string;
@@ -30,41 +36,47 @@ export default function Card({
   description,
   button,
 }: CardProps) {
-  /*
+  const cardRef = useRef<HTMLDivElement>(null);
   return (
-    <div
-      className={styles.card}
-      style={{
-        height: height,
-        minHeight: height,
-        width: width,
-        minWidth: width,
-      }}
-    >
-      <div className={styles.content}>
-        <Image
-          className={styles.image}
-          src={src}
-          width={800}
-          height={800}
-          alt={alt}
-        />
-        <h1 className={styles.headline}>{headline}</h1>
-        <p className={styles.description}>{description}</p>
+      <div
+        ref={cardRef}
+        className={styles.card}
+        style={{
+          height: height,
+          minHeight: height,
+          width: width,
+          minWidth: width,
+        }}
+      >
+        <div className={styles.content}>
+          <Image
+            className={styles.image}
+            src={src}
+            width={800}
+            height={800}
+            alt={alt}
+          />
+          <h1 className={styles.headline}>{headline}</h1>
+          <p className={styles.description}>{description}</p>
+        </div>
+        <div className={styles.bottom}>
+          <div className={styles.fade}></div>
+          {button}
+        </div>
       </div>
-      <div className={styles.bottom}>
-        <div className={styles.fade}></div>
-        {button}
-      </div>
-    </div>
-  );
-  */
-  return (
-    <Tooltip
-      message="We made a tooltip thats very very very longer than a usual one"
-      direction="top"
-    >
-      <div></div>
-    </Tooltip>
   );
 }
+
+/*
+      <HoverMenu
+        ref={cardRef}
+        content={<Navbar />}
+        direction="bottom"
+        borderWidth={0.1}
+        arrow={true}
+        arrowLength={2.0}
+        arrowWidth={0.8}
+        offset={1.0}
+        arrowPosition="middle"
+        shift="middle"
+      /> */

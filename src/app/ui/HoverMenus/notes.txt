@@ -1,0 +1,7 @@
+
+
+HoverMenu - not a wrapper, you have to be extremely careful with CSS in the parent component so it doesn't spill down to the children
+
+HoverMenuWrapper - hover menu created by a wrapper, has a 5% extra shift created by the calculations when you use it
+
+HoverMenuWrapper 2 - has a 0% extra shift. its just a "left: 0" for example

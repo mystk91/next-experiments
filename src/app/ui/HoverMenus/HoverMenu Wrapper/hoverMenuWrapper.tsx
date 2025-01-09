@@ -6,19 +6,20 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import styles from "./tooltip.module.css";
+import styles from "./hoverMenuWrapper.module.css";
 import classNames from "classnames";
 
-/*  Creates a basic tooltip for a parent element, has modifiable attributes. All units in rem.
- *    ref - takes a ref from a parent element
- *    direction - the direction which the tooltip will appear relative to its children
- *    arrow? - adds an arrow to the tooltip pointing towards the child elements
+/*  Displays a menu when you hover over the child element
+ *    children - the items which the hover event will be given to
+ *    content - the inputed menu component / html
+ *    direction - the direction which the menu will appear
+ *    arrow? - adds an arrow to the menu pointing towards the child elements
  *    arrowPosition? - the horizontal or vertical position of the arrow, should be perpendicular of "direction"
- *    shift?         - shifts the tooltip towards one side of its children, should be opposite of "arrowPosition"
+ *    shift?         - shifts the menu towards one side, should be opposite of "arrowPosition"
  */
-interface TooltipProps {
-  ref: React.RefObject<HTMLElement>;
-  message: string;
+interface HoverMenuProps {
+  children: React.ReactNode;
+  content: React.ReactNode;
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   delay?: number;
@@ -30,7 +31,6 @@ interface TooltipProps {
   backgroundColor?: string;
   borderWidth?: number;
   borderColor?: string;
-  borderRadius?: number;
   arrow?: boolean;
   arrowPosition?: "middle" | "top" | "right" | "left" | "bottom";
   shift?: "middle" | "top" | "right" | "left" | "bottom";
@@ -38,27 +38,21 @@ interface TooltipProps {
   arrowWidth?: number;
 }
 
-export default function Tooltip({
-  ref,
-  message = "",
+export default function HoverMenuProps({
+  children,
+  content,
   direction = "bottom",
   offset = 0.0,
   delay = 0,
-  fontSize = 1.4,
-  height = "max-content",
-  width = "max-content",
-  maxWidth = "18.0rem",
-  color = "var(--foreground)",
   backgroundColor = "var(--background)",
   borderWidth = 0.1,
   borderColor = "var(--borderColor)",
-  borderRadius = 0,
   arrow = false,
   arrowPosition = "middle",
   shift = "middle",
   arrowLength = 0.0,
   arrowWidth = 0.0,
-}: TooltipProps) {
+}: HoverMenuProps) {
   const [active, setActive] = useState(false);
 
   const [offsetStyles, setOffsetStyles] = useState({
@@ -68,12 +62,14 @@ export default function Tooltip({
     left: "",
   });
 
-  const tooltipRef = useRef<null | HTMLDivElement>(null);
+  const hoverMenuRef = useRef<null | HTMLDivElement>(null);
+  const childrenRef = useRef<null | HTMLDivElement>(null);
   const [appear, setAppear] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  //Adds the tooltip after an optional delay
-  function addTooltip() {
+  //Adds the menu after an optional delay
+  function addMenu() {
+    console.log("we add it");
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -81,8 +77,9 @@ export default function Tooltip({
     timerRef.current = setTimeout(() => setAppear(true), 1 + delay);
   }
 
-  //Removes the tooltip
-  function removeTooltip() {
+  //Removes the menu
+  function removeMenu() {
+    console.log("we remove it");
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -90,73 +87,28 @@ export default function Tooltip({
     timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
-  //Adds hover events to our parent element and clears timer
+  //Clears the timer
   useEffect(() => {
-    const targetRef = ref.current;
-    if (!targetRef) return;
-    targetRef.addEventListener("mouseenter", addTooltip);
-    targetRef.addEventListener("mouseleave", removeTooltip);
-
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      targetRef.removeEventListener("mouseenter", addTooltip);
-      targetRef.removeEventListener("mouseleave", removeTooltip);
     };
   }, []);
 
   //Moves the tooltip to one of the sides when it becomes active
   useEffect(() => {
-    if (tooltipRef.current && ref.current) {
+    if (hoverMenuRef.current && childrenRef.current) {
       let offsetCopy = { ...offsetStyles };
       const offsets = {
-        top:
-          (tooltipRef.current.clientHeight +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        bottom:
-          (tooltipRef.current.clientHeight +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        right:
-          (tooltipRef.current.clientWidth +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        left:
-          (tooltipRef.current.clientWidth +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
+        top: (hoverMenuRef.current.clientHeight + borderWidth * 10) / 10,
+        bottom: (hoverMenuRef.current.clientHeight + borderWidth * 10) / 10,
+        right: (hoverMenuRef.current.clientWidth + borderWidth * 10) / 10,
+        left: (hoverMenuRef.current.clientWidth + borderWidth * 10) / 10,
       };
       offsetCopy[direction] = `-${offsets[direction]}rem`;
       if (shift !== "middle") {
-        const shifts = {
-          top:
-            ref.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          bottom:
-            ref.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          right:
-            ref.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 10 -
-            arrowWidth * 10,
-          left:
-            ref.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 10 -
-            arrowWidth * 10,
-        };
-        const shiftDirections: Record<
+        const oppositeDirections: Record<
           "top" | "right" | "bottom" | "left",
           "top" | "right" | "bottom" | "left"
         > = {
@@ -165,17 +117,35 @@ export default function Tooltip({
           bottom: "top",
           left: "right",
         };
-        offsetCopy[shiftDirections[shift]] = `${shifts[shift] / 10}rem`;
+        const shifts = {
+          top:
+            childrenRef.current.clientHeight / 2 -
+            hoverMenuRef.current.clientHeight / 10 -
+            arrowWidth * 10,
+          bottom:
+            childrenRef.current.clientHeight / 2 -
+            hoverMenuRef.current.clientHeight / 10 -
+            arrowWidth * 10,
+          right:
+            childrenRef.current.clientWidth / 2 -
+            hoverMenuRef.current.clientWidth / 10 -
+            arrowWidth * 10,
+          left:
+            childrenRef.current.clientWidth / 2 -
+            hoverMenuRef.current.clientWidth / 10 -
+            arrowWidth * 10,
+        };
+        offsetCopy[oppositeDirections[shift]] = `${shifts[shift] / 10}rem`;
       } else {
         const shifts = {
           top:
-            ref.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 2,
+            childrenRef.current.clientHeight / 2 -
+            hoverMenuRef.current.clientHeight / 2,
           left:
-            ref.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 2
+            childrenRef.current.clientWidth / 2 -
+            hoverMenuRef.current.clientWidth / 2,
         };
-        const shiftDirections: Record<
+        const adjacentDirections: Record<
           "top" | "right" | "bottom" | "left",
           "top" | "left"
         > = {
@@ -184,8 +154,8 @@ export default function Tooltip({
           bottom: "left",
           left: "top",
         };
-        offsetCopy[shiftDirections[direction]] = `${
-          shifts[shiftDirections[direction]] / 10
+        offsetCopy[adjacentDirections[direction]] = `${
+          shifts[adjacentDirections[direction]] / 10
         }rem`;
       }
       setOffsetStyles(offsetCopy);
@@ -266,40 +236,51 @@ export default function Tooltip({
     };
   }
 
-  return active ? (
+  return (
     <div
-      ref={tooltipRef}
-      className={classNames(styles.tooltip, {
-        [styles.appear]: appear,
-      })}
-      data-direction={direction}
-      data-arrowposition={arrowPosition}
-      role="tooltip"
-      style={{
-        backgroundColor: backgroundColor,
-        border: `${borderWidth}rem solid ${borderColor}`,
-        borderRadius: `${borderRadius}rem`,
-        ...offsetStyles,
-      }}
+      className={styles.hoverMenuWrapper}
+      onMouseOver={addMenu}
+      onMouseLeave={removeMenu}
     >
-      {arrow ? (
-        <>
-          <div className={styles.arrow_before} style={arrowBeforeStyle()}></div>
-          <div className={styles.arrow_after} style={arrowAfterStyle()}></div>
-        </>
-      ) : null}
-      <div
-        className={styles.tooltip_message}
-        style={{
-          minHeight: height,
-          width: width,
-          maxWidth: maxWidth,
-          fontSize: `${fontSize}rem`,
-          color: color,
-        }}
-      >
-        {message}
-      </div>
+      {active && (
+        <div
+          ref={hoverMenuRef}
+          className={classNames(styles.hoverMenu, {
+            [styles.appear]: appear,
+          })}
+          data-direction={direction}
+          data-arrowposition={arrowPosition}
+          role="tooltip"
+          style={{
+            paddingTop:
+              direction === "bottom" ? `${arrowLength + offset}rem` : "",
+            paddingRight:
+              direction === "left" ? `${arrowLength + offset}rem` : "",
+            paddingBottom:
+              direction === "top" ? `${arrowLength + offset}rem` : "",
+            paddingLeft:
+              direction === "right" ? `${arrowLength + offset}rem` : "",
+            ...offsetStyles,
+          }}
+        >
+          <div className={styles.content}>
+            {arrow ? (
+              <>
+                <div
+                  className={styles.arrow_before}
+                  style={arrowBeforeStyle()}
+                ></div>
+                <div
+                  className={styles.arrow_after}
+                  style={arrowAfterStyle()}
+                ></div>
+              </>
+            ) : null}
+            {content}
+          </div>
+        </div>
+      )}
+      <div ref={childrenRef}>{children}</div>
     </div>
-  ) : null;
+  );
 }
