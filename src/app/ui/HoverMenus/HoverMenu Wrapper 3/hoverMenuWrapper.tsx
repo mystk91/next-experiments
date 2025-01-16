@@ -15,8 +15,8 @@ import classNames from "classnames";
  *    direction - the direction which the menu will appear
  *    arrow? - adds an arrow to the menu pointing towards the child elements
  *    arrowPosition? - the horizontal or vertical position of the arrow, should be perpendicular of "direction"
- *    centeredArrow? - will let the arrow be at the center of the children when true
  *    shift?         - shifts the menu towards one side, should be opposite of "arrowPosition"
+ *    shiftAmount?   - shifts the menu by inputed rem
  */
 interface HoverMenuProps {
   children: React.ReactNode;
@@ -31,6 +31,7 @@ interface HoverMenuProps {
   arrowPosition?: "middle" | "top" | "right" | "left" | "bottom";
   centeredArrow?: boolean;
   shift?: "middle" | "top" | "right" | "left" | "bottom";
+  shiftAmount?: number;
   arrowLength?: number;
   arrowWidth?: number;
   role?: string;
@@ -50,6 +51,7 @@ export default function HoverMenuProps({
   arrowPosition = "middle",
   centeredArrow = false,
   shift = "middle",
+  shiftAmount = 0.0,
   arrowLength = 0.0,
   arrowWidth = 0.0,
   role = "menu",
@@ -108,7 +110,7 @@ export default function HoverMenuProps({
       };
       offsetCopy[direction] = `-${offsets[direction]}rem`;
       if (shift !== "middle") {
-        const directions: Record<
+        const oppositeDirections: Record<
           "top" | "right" | "bottom" | "left",
           "top" | "right" | "bottom" | "left"
         > = {
@@ -117,7 +119,7 @@ export default function HoverMenuProps({
           bottom: "bottom",
           left: "right",
         };
-        offsetCopy[directions[shift]] = `0rem`;
+        offsetCopy[oppositeDirections[shift]] = `${shiftAmount}rem`;
       } else {
         const shifts = {
           top:
@@ -164,23 +166,46 @@ export default function HoverMenuProps({
       bottom: [`transparent`, `transparent`, borderColor, `transparent`],
       left: [`transparent`, `transparent`, `transparent`, borderColor],
     };
-    if (!childrenRef.current) return {};
-    const divisor = centeredArrow ? 20 : 50;
-    const shifts = {
-      middle: {},
-      top: {
-        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
-      },
-      right: {
-        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
-      },
-      bottom: {
-        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
-      },
-      left: {
-        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
-      },
-    };
+    if (!childrenRef.current || !hoverMenuRef.current) return {};
+    const shifts = centeredArrow
+      ? {
+          middle: {},
+          top: {
+            bottom: `${
+              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          right: {
+            right: `${
+              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          bottom: {
+            top: `${
+              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          left: {
+            left: `${
+              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+        }
+      : {
+          middle: {},
+          top: {
+            bottom: `${hoverMenuRef.current.clientHeight / 100}rem`,
+          },
+          right: {
+            right: `${hoverMenuRef.current.clientWidth / 100}rem`,
+          },
+          bottom: {
+            top: `${hoverMenuRef.current.clientHeight / 100}rem`,
+          },
+          left: {
+            left: `${hoverMenuRef.current.clientWidth / 100}rem`,
+          },
+        };
 
     return {
       borderWidth: borderWidths[direction].join(" "),
@@ -231,23 +256,46 @@ export default function HoverMenuProps({
       left: `translateX(${borderWidth}rem)`,
     };
 
-    if (!childrenRef.current) return {};
-    const divisor = centeredArrow ? 20 : 50;
-    const shifts = {
-      middle: {},
-      top: {
-        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
-      },
-      right: {
-        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
-      },
-      bottom: {
-        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
-      },
-      left: {
-        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
-      },
-    };
+    if (!childrenRef.current || !hoverMenuRef.current) return {};
+    const shifts = centeredArrow
+      ? {
+          middle: {},
+          top: {
+            bottom: `${
+              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          right: {
+            right: `${
+              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          bottom: {
+            top: `${
+              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+          left: {
+            left: `${
+              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
+            }rem`,
+          },
+        }
+      : {
+          middle: {},
+          top: {
+            bottom: `${hoverMenuRef.current.clientHeight / 100}rem`,
+          },
+          right: {
+            right: `${hoverMenuRef.current.clientWidth / 100}rem`,
+          },
+          bottom: {
+            top: `${hoverMenuRef.current.clientHeight / 100}rem`,
+          },
+          left: {
+            left: `${hoverMenuRef.current.clientWidth / 100}rem`,
+          },
+        };
 
     return {
       borderWidth: borderWidths[direction].join(" "),

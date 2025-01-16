@@ -6,11 +6,11 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import styles from "./hoverMenuWrapper.module.css";
+import styles from "./hoverMenu.module.css";
 import classNames from "classnames";
 
-/*  Displays a menu when you hover over the child element
- *    children - the items which the hover event will be given to
+/*  Displays an inputed menu when you hover over this's parent element
+ *    parentRef - takes a ref from a parent element
  *    content - the inputed menu component / html
  *    direction - the direction which the menu will appear
  *    arrow? - adds an arrow to the menu pointing towards the child elements
@@ -19,8 +19,8 @@ import classNames from "classnames";
  *    shift?         - shifts the menu towards one side, should be opposite of "arrowPosition"
  */
 interface HoverMenuProps {
-  children: React.ReactNode;
-  content: React.ReactNode;
+  parentRef: React.RefObject<HTMLElement>;
+  content: ReactNode;
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   delay?: number;
@@ -38,7 +38,7 @@ interface HoverMenuProps {
 }
 
 export default function HoverMenuProps({
-  children,
+  parentRef,
   content,
   direction = "bottom",
   offset = 0.0,
@@ -65,7 +65,6 @@ export default function HoverMenuProps({
   });
 
   const hoverMenuRef = useRef<null | HTMLDivElement>(null);
-  const childrenRef = useRef<null | HTMLDivElement>(null);
   const [appear, setAppear] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,18 +86,28 @@ export default function HoverMenuProps({
     timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
-  //Clears the timer
+  //Adds hover events to our parent element and clears timer
   useEffect(() => {
+    let parent = parentRef.current;
+    if (!parent) return;
+    parent.addEventListener("mouseenter", addMenu);
+    parent.addEventListener("mouseleave", removeMenu);
+
+    parent.setAttribute("aria-haspopup", role);
+    parent.setAttribute("aria-expanded", active.toString());
+
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      parent.removeEventListener("mouseenter", addMenu);
+      parent.removeEventListener("mouseleave", removeMenu);
     };
   }, []);
 
   //Moves the tooltip to one of the sides when it becomes active
   useEffect(() => {
-    if (hoverMenuRef.current && childrenRef.current) {
+    if (hoverMenuRef.current && parentRef.current) {
       let offsetCopy = { ...offsetStyles };
       const offsets = {
         top: (hoverMenuRef.current.clientHeight + borderWidth * 10) / 10,
@@ -121,10 +130,10 @@ export default function HoverMenuProps({
       } else {
         const shifts = {
           top:
-            childrenRef.current.clientHeight / 2 -
+            parentRef.current.clientHeight / 2 -
             hoverMenuRef.current.clientHeight / 2,
           left:
-            childrenRef.current.clientWidth / 2 -
+            parentRef.current.clientWidth / 2 -
             hoverMenuRef.current.clientWidth / 2,
         };
         const adjacentDirections: Record<
@@ -141,6 +150,9 @@ export default function HoverMenuProps({
         }rem`;
       }
       setOffsetStyles(offsetCopy);
+    }
+    if (parentRef.current) {
+      parentRef.current.setAttribute("aria-expanded", active.toString());
     }
     return () => {};
   }, [active]);
@@ -164,31 +176,30 @@ export default function HoverMenuProps({
       bottom: [`transparent`, `transparent`, borderColor, `transparent`],
       left: [`transparent`, `transparent`, `transparent`, borderColor],
     };
-    if (!childrenRef.current) return {};
-    const divisor = centeredArrow ? 20 : 50;
+    if (!parentRef.current) return {};
+    const divisor = centeredArrow ? 2 : 100;
     const shifts = {
       middle: {},
       top: {
-        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+        bottom: `${parentRef.current.clientHeight / divisor - arrowWidth}rem`,
       },
       right: {
-        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+        right: `${parentRef.current.clientWidth / divisor - arrowWidth}rem`,
       },
       bottom: {
-        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+        top: `${parentRef.current.clientHeight / divisor - arrowWidth}rem`,
       },
       left: {
-        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+        left: `${parentRef.current.clientWidth / divisor - arrowWidth}rem`,
       },
     };
-
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
       ...shifts[arrowPosition],
     };
   }
-
+  
   //Creates the styles for the arrow
   function arrowAfterStyle() {
     let borderWidths = {
@@ -225,30 +236,28 @@ export default function HoverMenuProps({
     };
     let transforms = {
       middle: "",
-      top: `translateY(-${borderWidth}rem)`,
+      top: `translateY(${borderWidth}rem)`,
       bottom: `translateY(${borderWidth}rem)`,
       right: `translateX(-${borderWidth}rem)`,
       left: `translateX(${borderWidth}rem)`,
     };
-
-    if (!childrenRef.current) return {};
-    const divisor = centeredArrow ? 20 : 50;
+    if (!parentRef.current) return {};
+    const divisor = centeredArrow ? 20 : 100;
     const shifts = {
       middle: {},
       top: {
-        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+        bottom: `${parentRef.current.clientHeight / divisor - arrowWidth}rem`,
       },
       right: {
-        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+        right: `${parentRef.current.clientWidth / divisor - arrowWidth}rem`,
       },
       bottom: {
-        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+        top: `${parentRef.current.clientHeight / divisor - arrowWidth}rem`,
       },
       left: {
-        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+        left: `${parentRef.current.clientWidth / divisor - arrowWidth}rem`,
       },
     };
-
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
@@ -257,54 +266,36 @@ export default function HoverMenuProps({
     };
   }
 
-  return (
+  return active ? (
     <div
-      className={styles.hoverMenuWrapper}
-      onMouseOver={addMenu}
-      onMouseLeave={removeMenu}
+      ref={hoverMenuRef}
+      className={classNames(styles.hoverMenu, {
+        [styles.appear]: appear,
+      })}
+      data-direction={direction}
+      data-arrowposition={arrowPosition}
+      aria-label={ariaLabel}
+      role={role}
+      style={{
+        paddingTop: direction === "bottom" ? `${arrowLength + offset}rem` : "",
+        paddingRight: direction === "left" ? `${arrowLength + offset}rem` : "",
+        paddingBottom: direction === "top" ? `${arrowLength + offset}rem` : "",
+        paddingLeft: direction === "right" ? `${arrowLength + offset}rem` : "",
+        ...offsetStyles,
+      }}
     >
-      {active && (
-        <div
-          ref={hoverMenuRef}
-          className={classNames(styles.hoverMenu, {
-            [styles.appear]: appear,
-          })}
-          data-direction={direction}
-          data-arrowposition={arrowPosition}
-          role={role}
-          aria-label={ariaLabel}
-          style={{
-            paddingTop:
-              direction === "bottom" ? `${arrowLength + offset}rem` : "",
-            paddingRight:
-              direction === "left" ? `${arrowLength + offset}rem` : "",
-            paddingBottom:
-              direction === "top" ? `${arrowLength + offset}rem` : "",
-            paddingLeft:
-              direction === "right" ? `${arrowLength + offset}rem` : "",
-            ...offsetStyles,
-          }}
-        >
-          <div className={styles.content}>
-            {arrow ? (
-              <>
-                <div
-                  className={styles.arrow_before}
-                  style={arrowBeforeStyle()}
-                ></div>
-                <div
-                  className={styles.arrow_after}
-                  style={arrowAfterStyle()}
-                ></div>
-              </>
-            ) : null}
-            {content}
-          </div>
-        </div>
-      )}
-      <div ref={childrenRef} aria-expanded={active}>
-        {children}
+      <div className={styles.content}>
+        {arrow ? (
+          <>
+            <div
+              className={styles.arrow_before}
+              style={arrowBeforeStyle()}
+            ></div>
+            <div className={styles.arrow_after} style={arrowAfterStyle()}></div>
+          </>
+        ) : null}
+        {content}
       </div>
     </div>
-  );
+  ) : null;
 }

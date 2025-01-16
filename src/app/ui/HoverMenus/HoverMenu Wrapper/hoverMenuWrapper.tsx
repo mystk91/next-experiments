@@ -23,19 +23,17 @@ interface HoverMenuProps {
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   delay?: number;
-  fontSize?: number;
-  height?: string;
-  width?: string;
-  maxWidth?: string;
-  color?: string;
   backgroundColor?: string;
   borderWidth?: number;
   borderColor?: string;
   arrow?: boolean;
   arrowPosition?: "middle" | "top" | "right" | "left" | "bottom";
+  centeredArrow?: boolean;
   shift?: "middle" | "top" | "right" | "left" | "bottom";
   arrowLength?: number;
   arrowWidth?: number;
+  role?: string;
+  ariaLabel?: string;
 }
 
 export default function HoverMenuProps({
@@ -49,9 +47,12 @@ export default function HoverMenuProps({
   borderColor = "var(--borderColor)",
   arrow = false,
   arrowPosition = "middle",
+  centeredArrow = false,
   shift = "middle",
   arrowLength = 0.0,
   arrowWidth = 0.0,
+  role = "menu",
+  ariaLabel = "Menu",
 }: HoverMenuProps) {
   const [active, setActive] = useState(false);
 
@@ -69,7 +70,6 @@ export default function HoverMenuProps({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   //Adds the menu after an optional delay
   function addMenu() {
-    console.log("we add it");
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -79,7 +79,6 @@ export default function HoverMenuProps({
 
   //Removes the menu
   function removeMenu() {
-    console.log("we remove it");
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -112,28 +111,16 @@ export default function HoverMenuProps({
           "top" | "right" | "bottom" | "left",
           "top" | "right" | "bottom" | "left"
         > = {
-          top: "bottom",
+          top: "top",
           right: "left",
-          bottom: "top",
+          bottom: "bottom",
           left: "right",
         };
         const shifts = {
-          top:
-            childrenRef.current.clientHeight / 2 -
-            hoverMenuRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          bottom:
-            childrenRef.current.clientHeight / 2 -
-            hoverMenuRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          right:
-            childrenRef.current.clientWidth / 2 -
-            hoverMenuRef.current.clientWidth / 10 -
-            arrowWidth * 10,
-          left:
-            childrenRef.current.clientWidth / 2 -
-            hoverMenuRef.current.clientWidth / 10 -
-            arrowWidth * 10,
+          top: childrenRef.current.clientHeight / 20,
+          bottom: childrenRef.current.clientHeight / 20,
+          right: childrenRef.current.clientWidth / 20,
+          left: childrenRef.current.clientWidth / 20,
         };
         offsetCopy[oppositeDirections[shift]] = `${shifts[shift] / 10}rem`;
       } else {
@@ -182,9 +169,28 @@ export default function HoverMenuProps({
       bottom: [`transparent`, `transparent`, borderColor, `transparent`],
       left: [`transparent`, `transparent`, `transparent`, borderColor],
     };
+    if (!childrenRef.current) return {};
+    const divisor = centeredArrow ? 22.22 : 50;
+    const shifts = {
+      middle: {},
+      top: {
+        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+      },
+      right: {
+        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+      },
+      bottom: {
+        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+      },
+      left: {
+        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+      },
+    };
+
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
+      ...shifts[arrowPosition],
     };
   }
 
@@ -224,15 +230,35 @@ export default function HoverMenuProps({
     };
     let transforms = {
       middle: "",
-      top: `translateY(${borderWidth}rem)`,
-      bottom: `translateY(-${borderWidth}rem)`,
+      top: `translateY(-${borderWidth}rem)`,
+      bottom: `translateY(${borderWidth}rem)`,
       right: `translateX(-${borderWidth}rem)`,
       left: `translateX(${borderWidth}rem)`,
     };
+
+    if (!childrenRef.current) return {};
+    const divisor = centeredArrow ? 22.22 : 50;
+    const shifts = {
+      middle: {},
+      top: {
+        bottom: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+      },
+      right: {
+        right: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+      },
+      bottom: {
+        top: `${childrenRef.current.clientHeight / divisor - arrowWidth}rem`,
+      },
+      left: {
+        left: `${childrenRef.current.clientWidth / divisor - arrowWidth}rem`,
+      },
+    };
+
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
       transform: transforms[arrowPosition],
+      ...shifts[arrowPosition],
     };
   }
 
@@ -250,7 +276,8 @@ export default function HoverMenuProps({
           })}
           data-direction={direction}
           data-arrowposition={arrowPosition}
-          role="tooltip"
+          role={role}
+          aria-label={ariaLabel}
           style={{
             paddingTop:
               direction === "bottom" ? `${arrowLength + offset}rem` : "",
@@ -280,7 +307,9 @@ export default function HoverMenuProps({
           </div>
         </div>
       )}
-      <div ref={childrenRef}>{children}</div>
+      <div ref={childrenRef} aria-expanded={active}>
+        {children}
+      </div>
     </div>
   );
 }

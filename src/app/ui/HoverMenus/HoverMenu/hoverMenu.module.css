@@ -34,35 +34,35 @@
 }
 
 .hoverMenu[data-direction="top"] .arrow_before {
-  top: 100%;
+  top: 99.9%;
 }
 
 .hoverMenu[data-direction="top"] .arrow_after {
-  top: 100%;
+  top: 99.9%;
 }
 
 .hoverMenu[data-direction="right"] .arrow_before {
-  right: 100%;
+  right: 99.9%;
 }
 
 .hoverMenu[data-direction="right"] .arrow_after {
-  right: 100%;
+  right: 99.9%;
 }
 
 .hoverMenu[data-direction="bottom"] .arrow_before {
-  bottom: 100%;
+  bottom: 99.9%;
 }
 
 .hoverMenu[data-direction="bottom"] .arrow_after {
-  bottom: 100%;
+  bottom: 99.9%;
 }
 
 .hoverMenu[data-direction="left"] .arrow_before {
-  left: 100%;
+  left: 99.9%;
 }
 
 .hoverMenu[data-direction="left"] .arrow_after {
-  left: 100%;
+  left: 99.9%;
 }
 
 .hoverMenu[data-arrowposition="left"] .arrow_before,
