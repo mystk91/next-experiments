@@ -18,7 +18,6 @@ export default function MainLayout({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          marginTop: "4rem",
         }}
       >
         {children}
