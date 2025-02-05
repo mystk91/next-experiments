@@ -1,0 +1,43 @@
+.page {
+  padding-left: min(10rem, 10vw);
+  padding-top: 1rem;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  max-width: 60rem;
+  width: 100vw;
+}
+
+.page h1 {
+  margin: 1rem 0;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.4rem;
+}
+
+.definitions {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.4rem;
+  padding-left: 2rem;
+}
+
+.definition {
+  font-style: italic;
+  text-wrap: pretty;
+}
+
+.links a {
+  color: blue;
+  width: max-content;
+}
+
+.example {
+  padding-left: 1rem;
+  margin: 2rem 0;
+  text-indent: 2rem;
+  text-wrap: pretty;
+}

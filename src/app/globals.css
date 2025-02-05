@@ -7,6 +7,7 @@
   --borderColor: rgb(50, 50, 50);
   --smallBorder: 0.5px solid var(--borderColor);
   --softBackground: rgb(245, 245, 245);
+  --softForeground: rgb(95, 95, 95);
   --buttonBackground: rgb(230, 230, 230);
   --buttonHoverColor: rgb(220, 220, 220);
   --buttonActiveColor: rgb(225, 225, 225);
@@ -50,6 +51,7 @@ svg {
     --borderColor: white;
     --smallBorder: 0.5px solid var(--borderColor);
     --softBackground: rgb(95, 95, 95);
+    --softForeground: rgb(245, 245, 245);
     --buttonBackground: rgb(80, 80, 80);
     --buttonHoverColor: rgb(95, 95, 95);
     --buttonActiveColor: rgb(105, 105, 105);
