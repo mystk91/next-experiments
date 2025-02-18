@@ -65,7 +65,5 @@ export default function Search(props: SearchProps) {
         </li>
       ))}
     </ul>
-  ) : (
-    <div>{"Nothing was found."}</div>
-  );
+  ) : null;
 }
