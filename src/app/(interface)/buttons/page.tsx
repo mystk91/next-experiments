@@ -15,7 +15,10 @@ export default function Page() {
       }}
     >
       <Button text="Accept" type="primary" />
-      <Button text="Cancel" type="secondary" />
+      <Button
+        text="This is a button with lots of words. Way more words than a button really should have."
+        type="secondary"
+      />
       <Button text="Options" type="tertiary" />
     </div>
   );
