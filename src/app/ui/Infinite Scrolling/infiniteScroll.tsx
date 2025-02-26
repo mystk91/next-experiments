@@ -8,10 +8,17 @@ export default function InfiniteScroll() {
   const [items, setItems] = useState<{}[]>([]);
   const [isError, setIsError] = useState(false);
   const [sort, setSort] = useState("newest");
-  const [lastItemData, setLastItemData] = useState({});
+  const lastItemDataRef = useRef({});
+  function setLastItemDataRef(point: {}) {
+    lastItemDataRef.current = point;
+  }
 
+  const didMountRef = useRef(false);
   useEffect(() => {
-    getItems();
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      getItems();
+    }
   }, [sort]);
 
   //Fetches items from the backend
@@ -21,7 +28,7 @@ export default function InfiniteScroll() {
         method: "POST",
         body: JSON.stringify({
           sort,
-          lastItem: lastItemData,
+          lastItem: lastItemDataRef.current,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -29,12 +36,12 @@ export default function InfiniteScroll() {
       if (data.errors) throw new Error();
       setItems((prev) => [...prev, ...data.items]);
       if (data.lastItem) {
-        setLastItemData(data.lastItem);
+        setLastItemDataRef(data.lastItem);
       }
     } catch (error) {
       setIsError(true);
     }
-  }, [sort, lastItemData]);
+  }, [sort, lastItemDataRef.current]);
 
   // Create an observer on the last item
   const observer = useRef<IntersectionObserver | null>(null);
@@ -67,7 +74,7 @@ export default function InfiniteScroll() {
               ? () => {}
               : () => {
                   setItems([]);
-                  setLastItemData({});
+                  setLastItemDataRef({});
                   setSort(sortOption);
                 }
           }
