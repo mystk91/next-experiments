@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import styles from "./infiniteScroll.module.css";
 import classNames from "classnames";
+import Button from "../Buttons/Button Set 1/button";
 
 export default function InfiniteScroll() {
   const [items, setItems] = useState<{}[]>([]);
@@ -33,11 +34,13 @@ export default function InfiniteScroll() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
+      if (0 == Math.floor(Math.random() * 3)) throw new Error();
       if (data.errors) throw new Error();
       setItems((prev) => [...prev, ...data.items]);
       if (data.lastItem) {
         setLastItemDataRef(data.lastItem);
       }
+      if (isError) setIsError(false);
     } catch (error) {
       setIsError(true);
     }
@@ -144,8 +147,12 @@ export default function InfiniteScroll() {
   return isError ? (
     <div className={styles.infinite}>
       <div className={styles.sort_options_container}>{sortOptions()}</div>
-      <div className={styles.error_message}>
-        {`This content couldn't be shown to you at this time.`}
+      {pageItems()}
+      <div className={styles.error_container}>
+        <div
+          className={styles.error_message}
+        >{`Something went wrong additional items...`}</div>
+        <Button text="Retry" type="secondary" onClick={getItems} />
       </div>
     </div>
   ) : (

@@ -1,30 +1,39 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import styles from "./pagination.module.css";
+import styles from "./pagination_spa.module.css";
 import classNames from "classnames";
-import { useSearchParams } from "next/navigation";
 import Button from "../Buttons/Button Set 1/button";
 
-export default function Pagination() {
+//A single page application version of pagination
+export default function PaginationSpa() {
   const DEFAULT_PAGE_SIZE = 12;
   const DEFAULT_SORT = "newest";
   const [items, setItems] = useState<{}[]>([]);
   const [page, setPage] = useState(1);
   const [isError, setIsError] = useState(false);
   const [numPages, setNumPages] = useState(0);
-  const [sort, setSort] = useState();
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const searchParams = useSearchParams();
+  const [sort, setSort] = useState("");
+  const [pageSize, setPageSize] = useState<number | null>();
+  const [pageInputValue, setPageInputValue] = useState("");
 
   useEffect(() => {
     getItems();
-  }, [searchParams]);
+  }, [page, pageSize]);
+
+  useEffect(() => {
+    getItems(true);
+  }, [sort]);
 
   //Fetches items from the backend
-  async function getItems() {
+  async function getItems(changedSort?: boolean) {
     try {
-      const res = await fetch(`/api/pagination?${searchParams}`);
+      let params: string[] = [];
+      if (page !== 1 && !changedSort) params.push(`page=${page}`);
+      if (pageSize !== DEFAULT_PAGE_SIZE) params.push(`pagesize=${pageSize}`);
+      if (sort !== DEFAULT_SORT) params.push(`sort=${sort}`);
+      const queryString = params.toString() ? `?${params.join("&")}` : "";
+      const res = await fetch(`/api/pagination_spa${queryString}`);
       const data = await res.json();
       if (data.errors) throw new Error();
       //if (0 == Math.floor(Math.random() * 3)) throw new Error();
@@ -39,31 +48,59 @@ export default function Pagination() {
     }
   }
 
+  //Creates a menu for changing page size at the top of the component
+  function sizeOptions() {
+    const pageSizeButton = (text: string, newPageSize: number) => {
+      return (
+        <button
+          key={newPageSize}
+          className={classNames(styles.size_option, {
+            [styles.active]: pageSize === newPageSize,
+          })}
+          aria-label={`Change page size to ${newPageSize} items`}
+          onClick={() => {
+            setPageSize(newPageSize);
+          }}
+        >
+          {text}
+        </button>
+      );
+    };
+    const pageSizesArr: JSX.Element[] = [
+      pageSizeButton("12", 12),
+      pageSizeButton("24", 24),
+      pageSizeButton("36", 36),
+    ];
+    return (
+      <div className={styles.size_options} aria-label="Page size options">
+        {pageSizesArr}
+      </div>
+    );
+  }
+
   //Creates the sort menu at the top of component
   function sortOptions() {
-    const sortLink = (text: string, sortOption: string, key: string) => {
-      let params: string[] = [];
-      if (pageSize !== DEFAULT_PAGE_SIZE) params.push(`pagesize=${pageSize}`);
-      if (sortOption !== DEFAULT_SORT) params.push(`sort=${sortOption}`);
-      const queryString = params.toString() ? `?${params.join("&")}` : "";
+    const sortButton = (text: string, sortOption: string, key: string) => {
       return (
-        <Link
-          href={`/pagination/${queryString}`}
+        <button
           key={key}
           className={classNames(styles.sort_option, {
             [styles.active]: sort === sortOption,
           })}
           aria-label={`Sort by ${sortOption}`}
+          onClick={() => {
+            setSort(sortOption);
+          }}
         >
           {text}
-        </Link>
+        </button>
       );
     };
     const sortOptionsArr: JSX.Element[] = [
-      sortLink("Newest", "newest", "newest"),
-      sortLink("Oldest", "oldest", "oldest"),
-      sortLink("Popular", "popular", "popular"),
-      sortLink("Best", "best", "best"),
+      sortButton("Newest", "newest", "newest"),
+      sortButton("Oldest", "oldest", "oldest"),
+      sortButton("Popular", "popular", "popular"),
+      sortButton("Best", "best", "best"),
     ];
     return (
       <div className={styles.sort_options} aria-label="Sort options">
@@ -81,20 +118,15 @@ export default function Pagination() {
       className?: string,
       ariaLabel?: string
     ) => {
-      let params: string[] = [];
-      if (page !== 1) params.push(`page=${page}`);
-      if (pageSize !== DEFAULT_PAGE_SIZE) params.push(`pagesize=${pageSize}`);
-      if (sort !== DEFAULT_SORT) params.push(`sort=${sort}`);
-      const queryString = params.toString() ? `?${params.join("&")}` : "";
       return (
-        <Link
-          href={`/pagination/${queryString}`}
+        <button
           key={key}
           className={styles[className || ``]}
           aria-label={ariaLabel ? ariaLabel : `Go to page ${page}`}
+          onClick={() => setPage(page)}
         >
           {text}
-        </Link>
+        </button>
       );
     };
     const menuArr: JSX.Element[] = [];
@@ -180,14 +212,15 @@ export default function Pagination() {
           });
           return (
             <li key={i} role="listitem">
-              <div
+              <button
                 className={styles.link_container}
                 style={{
                   backgroundImage: `url(${process.env.NEXT_PUBLIC_PROTOCOL}${process.env.NEXT_PUBLIC_DOMAIN}/images/wallpapers/${item.fileName})`,
                 }}
-              >
-                <Link href={`/pagination/${pathName}`}></Link>
-              </div>
+                onClick={() => {
+                  /* Some function that displays our item*/
+                }}
+              ></button>
               <div className={styles.item_info}>
                 <div>
                   <div className={styles.info_label}>{`Views:`}</div>
@@ -211,19 +244,45 @@ export default function Pagination() {
 
   return isError ? (
     <div className={styles.pagination}>
-      <div className={styles.sort_options_container}>{sortOptions()}</div>
+      <div className={styles.options_container}>
+        {sizeOptions()}
+        {sortOptions()}
+      </div>
       <div className={styles.error_container}>
         <div
           className={styles.error_message}
-        >{`Something went wrong loading...`}</div>
+        >{`This content couldn't be shown to you at this time.`}</div>
         <Button text="Retry" type="secondary" onClick={getItems} />
       </div>
     </div>
   ) : numPages ? (
     <div className={styles.pagination}>
-      <div className={styles.sort_options_container}>{sortOptions()}</div>
+      <div className={styles.options_container}>
+        {sizeOptions()}
+        {sortOptions()}
+      </div>
       {pageItems()}
-      {paginationMenu()}
+      <div className={styles.pagination_menu_container}>
+        {paginationMenu()}
+        <form
+          className={styles.page_input}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(Number(pageInputValue));
+            setPageInputValue("");
+          }}
+        >
+          <label htmlFor="page-input">{`Go to page:`}</label>
+          <input
+            id="page-input"
+            name="page-input"
+            type="text"
+            value={pageInputValue}
+            onChange={(e) => setPageInputValue(e.target.value)}
+            aria-label="Input a page number and hit Enter to navigate"
+          />
+        </form>
+      </div>
     </div>
   ) : null;
 }
