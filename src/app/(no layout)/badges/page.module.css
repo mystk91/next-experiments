@@ -1,0 +1,19 @@
+.page {
+  display: flex;
+  width: 100vw;
+  padding-top: 4rem;
+  align-items: center;
+  flex-direction: column;
+  row-gap: 4rem;
+}
+
+.badges {
+  width: 90vw;
+  max-width: 72rem;
+  height: max-content;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 2rem;
+}
