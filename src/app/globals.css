@@ -1,6 +1,8 @@
 @import "~normalize.css/normalize.css";
 
 :root {
+  --wb: white;
+  --bw: black;
   --pageBackground: white;
   --background: white;
   --foreground: black;
@@ -45,6 +47,8 @@ svg {
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
+    --wb: black;
+    --bw: white;
     --pageBackground: rgb(30, 30, 30);
     --background: rgb(50, 50, 50);
     --foreground: white;
