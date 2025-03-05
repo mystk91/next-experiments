@@ -18,11 +18,12 @@
     "focus-trap": "^7.6.4",
     "focus-trap-react": "^11.0.3",
     "lodash": "^4.17.21",
-    "next": "15.0.2",
+    "next": "^15.2.2-canary.0",
     "normalize.css": "^8.0.1",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
     "react-toastify": "^11.0.5",
+    "recharts": "^2.15.1",
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
