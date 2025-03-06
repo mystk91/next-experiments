@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import Banner from "@/app/ui/banner/banner";
 import Navbar from "@/app/ui/navbar/navbar";
+import Footer from "../ui/Footers/Footer 1/footer";
 
 export const metadata: Metadata = {
   title: "Brifty",
@@ -19,6 +20,7 @@ export default function MainLayout({
         <Banner />
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );
