@@ -1,0 +1,19 @@
+.page {
+  display: flex;
+  width: 100vw;
+  padding-top: 4rem;
+  align-items: center;
+  flex-direction: column;
+  row-gap: 4rem;
+}
+
+.tags {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 90vw;
+  max-width: 60rem;
+  column-gap: 0.8rem;
+  row-gap: 0.8rem;
+}
