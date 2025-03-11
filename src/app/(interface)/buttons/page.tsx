@@ -14,12 +14,12 @@ export default function Page() {
         columnGap: "1rem",
       }}
     >
-      <Button text="Accept" type="primary" />
+      <Button text="Accept" variant="primary" />
       <Button
         text="This is a button with lots of words. Way more words than a button really should have."
-        type="secondary"
+        variant="secondary"
       />
-      <Button text="Options" type="tertiary" />
+      <Button text="Options" variant="tertiary" />
     </div>
   );
 }

@@ -79,7 +79,7 @@ export default function Page() {
 
   return (
     <div className={styles.page}>
-      <Button type={"primary"} text={"Show me a toast!"} onClick={showToast} />
+      <Button variant={"primary"} text={"Show me a toast!"} onClick={showToast} />
       <ToastContainer transition={transition} limit={6} />
     </div>
   );

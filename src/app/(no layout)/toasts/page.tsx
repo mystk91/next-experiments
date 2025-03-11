@@ -10,14 +10,14 @@ export default function Page() {
     type: "success" | "warning" | "error" | "info" | "news",
     message: string,
     title?: string,
-    persists?: boolean,
+    autoClose?: boolean,
     duration?: number
   ) => {
     return {
       type: type,
       message: message,
       title: title,
-      persists: persists,
+      autoClose: autoClose,
       duration: duration,
     };
   };
@@ -53,7 +53,7 @@ export default function Page() {
                 ]);
               }}
               title={toast.title}
-              persists={toast.persists}
+              autoClose={toast.autoClose}
               duration={toast.duration}
               key={i}
             />

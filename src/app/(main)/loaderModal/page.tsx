@@ -17,7 +17,7 @@ export default function Page() {
   return (
     <div className={styles.page}>
       {modal}
-      <Button text={"Show the loader!"} type={"primary"} onClick={showLoader} />
+      <Button text={"Show the loader!"} variant={"primary"} onClick={showLoader} />
     </div>
   );
 }
