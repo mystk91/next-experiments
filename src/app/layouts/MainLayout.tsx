@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import Banner from "@/app/ui/banner/banner";
 import Navbar from "@/app/ui/navbar/navbar";
+//import Navbar from "@/app/ui/Navbars/Descending Menu/navbar";
 import Footer from "../ui/Footers/Footer 1/footer";
 
 export const metadata: Metadata = {

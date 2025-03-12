@@ -7,7 +7,7 @@ import CircularTabs from "@/app/ui/Tabs/Circular Tabs/tabs";
 export default function Page() {
   return (
     <div style={{}}>
-      <CircularTabs />
+      <Tabs />
     </div>
   );
 }

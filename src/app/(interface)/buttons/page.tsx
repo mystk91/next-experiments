@@ -16,7 +16,7 @@ export default function Page() {
     >
       <Button text="Accept" variant="primary" />
       <Button
-        text="This is a button with lots of words. Way more words than a button really should have."
+        text="This is a good button!"
         variant="secondary"
       />
       <Button text="Options" variant="tertiary" />
