@@ -10,8 +10,8 @@
   --smallBorder: 0.5px solid var(--borderColor);
   --softBackground: rgb(245, 245, 245);
   --softForeground: rgb(95, 95, 95);
-  --buttonBackground: rgb(230, 230, 230);
-  --buttonHoverColor: rgb(220, 220, 220);
+  --buttonBackground: rgb(240, 240, 240);
+  --buttonHoverColor: rgb(225, 225, 225);
   --buttonActiveColor: rgb(225, 225, 225);
   --modalBackdropColor: rgba(0, 0, 0, 0.4);
   --linkColor: blue;
@@ -56,8 +56,8 @@ svg {
     --smallBorder: 0.5px solid var(--borderColor);
     --softBackground: rgb(95, 95, 95);
     --softForeground: rgb(245, 245, 245);
-    --buttonBackground: rgb(80, 80, 80);
-    --buttonHoverColor: rgb(95, 95, 95);
+    --buttonBackground: rgb(50, 50, 50);
+    --buttonHoverColor: rgb(70, 70, 70);
     --buttonActiveColor: rgb(105, 105, 105);
     --modalBackdropColor: rgba(0, 0, 0, 0.2);
     --iconColor: white;

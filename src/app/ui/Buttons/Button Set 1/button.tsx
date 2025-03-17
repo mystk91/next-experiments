@@ -9,6 +9,7 @@ interface ButtonProps {
   children?: React.ReactNode;
   variant: "primary" | "secondary" | "tertiary";
   onClick?: () => void;
+  fullWidth?: boolean;
   ariaLabel?: string;
   type?: "button" | "submit" | "reset";
   form?: string;
@@ -22,9 +23,10 @@ interface ButtonProps {
 
 export default function Button({
   text,
+  children,
   variant,
   onClick,
-  children,
+  fullWidth = false,
   ariaLabel,
   type = "button",
   form,
@@ -39,7 +41,9 @@ export default function Button({
     <button
       id={id}
       name={name}
-      className={classNames(styles.button, styles[variant])}
+      className={classNames(styles.button, styles[variant], {
+        [styles.fullWidth]: fullWidth,
+      })}
       onClick={onClick}
       aria-label={ariaLabel}
       type={type}
