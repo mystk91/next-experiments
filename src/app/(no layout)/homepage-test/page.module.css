@@ -1,0 +1,51 @@
+.page {
+  width: 100vw;
+  min-height: 100vh;
+  height: max-content;
+  display: flex;
+  overflow-x: auto;
+}
+
+.homepage {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 5vw 10rem;
+  row-gap: 1.2rem;
+  min-width: 65rem;
+  margin: auto auto;
+}
+
+.container {
+  max-width: 90rem;
+}
+
+.intro .bodyText {
+  text-align: center;
+  font-size: 2rem;
+  text-wrap: pretty;
+}
+
+.bodyText > * {
+  margin: 0.3rem 0;
+}
+
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.2rem;
+}
+
+.homepage h1 {
+  margin: 1rem 0;
+}
+
+.contactOptions {
+  justify-self: flex-start;
+}
+
+.contactOptions li {
+  list-style-type: none;
+}

@@ -28,11 +28,11 @@ export default function Page() {
       <div className={styles.icons} style={{ flexDirection: "column" }}>
         <GeneralIcon
           image={mountain}
-          notifications={242}
+          notifications={"242"}
           name={"Starry Stars"}
         />
         <GeneralIcon image={news} name={"News"} />
-        <GeneralIcon image={mountain} notifications={5} name={"Starry Stars"} />
+        <GeneralIcon image={mountain} notifications={"5"} name={"Starry Stars"} />
       </div>
     </div>
   );

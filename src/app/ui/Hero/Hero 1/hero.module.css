@@ -1,0 +1,61 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100vw;
+}
+
+.hero > * {
+  width: 100%;
+}
+
+.backgroundWrapper {
+  clip: rect(0, auto, auto, 0);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.backgroundWrapper::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-image: url("/images/ranier.jpg");
+  background-position: center -67rem;
+  background-repeat: no-repeat;
+  background-color: rgb(40, 40, 40);
+  transform: translateZ(0); /* Helps Mobile */
+  will-change: transform;
+}
+
+.heading_wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.heading_wrapper h1,
+.heading_wrapper h2 {
+  all: unset;
+  box-sizing: border-box;
+}
+
+.heading_wrapper h1 {
+}
+
+.heading_wrapper h2 {
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 650px) {
+}
+
+/* Desktop Styles */
+@media screen and (min-width: 651px) and (max-width: 1023px) {
+}
