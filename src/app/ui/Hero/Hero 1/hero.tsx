@@ -28,9 +28,23 @@ export default function Hero({ style }: HeroProps) {
         <div className={styles.logo_wrapper}></div>
         <div className={styles.heading_wrapper}>
           <h1>{`Unravel Forgotten Mysteries`}</h1>
-          <h3>{`Here you can do neat stuff and the get the most value out of it`}</h3>
+          <h2>{`Here you can do neat stuff and the get the most value out of it`}</h2>
         </div>
-        <div className={styles.buttons_wrapper}></div>
+        <div className={styles.buttons_wrapper}>
+          <Button
+            variant="primary"
+            width="smallest"
+            style={{ backgroundColor: "rgb(55, 100, 60)" }}
+          >{`Get Started`}</Button>
+          <Button
+            variant="secondary"
+            width="smallest"
+            style={{
+              borderColor: "rgb(45, 82, 50)",
+              color: "rgb(42, 73, 46)",
+            }}
+          >{`Learn More`}</Button>
+        </div>
       </div>
     </div>
   );

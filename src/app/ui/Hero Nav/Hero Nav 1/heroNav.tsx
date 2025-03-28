@@ -18,6 +18,7 @@ export default function HeroNav({ style }: HeroNavProps) {
 
   return <nav className={styles.hero_nav} style={{ ...style }}>
     
+    
 
   </nav>;
 }
