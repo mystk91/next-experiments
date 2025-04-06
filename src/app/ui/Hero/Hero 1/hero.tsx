@@ -11,20 +11,18 @@ interface HeroProps {
 }
 
 export default function Hero({ style }: HeroProps) {
-  const [property, setProperty] = useState<JSX.Element>(<div>Welcome!</div>);
-
   //componentDidMount, runs when component mounts, then componentDismount
   useEffect(() => {
     return () => {};
   }, []);
 
   return (
-    <div className={styles.hero} style={{ ...style }}>
+    <header className={styles.hero} style={{ ...style }} role="banner">
       <div className={styles.background_wrapper}></div>
-      <div className={styles.nav_wrapper}>
-        <HeroNav />
-      </div>
       <div className={styles.hero_content_wrapper}>
+        <div className={styles.nav_wrapper}>
+          <HeroNav />
+        </div>
         <div className={styles.logo_wrapper}></div>
         <div className={styles.heading_wrapper}>
           <h1>{`Unravel Forgotten Mysteries`}</h1>
@@ -46,6 +44,6 @@ export default function Hero({ style }: HeroProps) {
           >{`Learn More`}</Button>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

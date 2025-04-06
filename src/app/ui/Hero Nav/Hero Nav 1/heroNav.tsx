@@ -16,9 +16,36 @@ export default function HeroNav({ style }: HeroNavProps) {
     return () => {};
   }, []);
 
-  return <nav className={styles.hero_nav} style={{ ...style }}>
-    
-    
-
-  </nav>;
+  return (
+    <nav
+      className={styles.hero_nav}
+      style={{ ...style }}
+      aria-label="Hero Navigation"
+    >
+      <div className={styles.links_wrapper}>
+        <ul className={styles.links}>
+          <li>
+            <div>
+              <Link href="/discover">Discover</Link>
+            </div>
+          </li>
+          <li>
+            <div>
+              <Link href="/stories">Stories</Link>
+            </div>
+          </li>
+          <li>
+            <div>
+              <Link href="/resources">Resources</Link>
+            </div>
+          </li>
+          <li>
+            <div>
+              <Link href="/start">Start Now</Link>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  );
 }
