@@ -8,20 +8,28 @@ import ProgressBar3 from "@/app/ui/progressBar/Progress Bar 3/progressBar";
 import ProgressBar4 from "@/app/ui/progressBar/Progress Bar FullWidth/progressBar";
 import ProgressBarTop from "@/app/ui/progressBar/Progress Bar Top/progressBar";
 import AnimateProgress from "@/app/ui/progressBar/Animate Progress Bar/animateBar";
+import PageProgress from "@/app/ui/progressBar/Page Progress/pageProgress";
 
 export default function Page() {
   return (
     <div
       style={{
         display: "flex",
-        minHeight: "100vh",
+        flexDirection: "column",
+        minHeight: "max-content",
         height: "100vh",
         width: "100vw",
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <AnimateProgress time={600} increment={1} />
+      <PageProgress />
+      <div
+        style={{ height: "2000px", width: "100vw", backgroundColor: "grey" }}
+      ></div>
+      <div
+        style={{ height: "2000px", width: "100vw", backgroundColor: "white" }}
+      ></div>
     </div>
   );
 }
