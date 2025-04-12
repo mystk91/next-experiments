@@ -1,0 +1,57 @@
+.backdrop {
+  background-color: var(--modalBackdropColor);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  cursor: pointer;
+  overflow-y: scroll;
+  padding: 2vh 0 25vh;
+}
+
+.modal {
+  border: var(--smallBorder);
+  background-color: var(--background);
+  height: max-content;
+  padding: 1rem 1.6rem 1rem 1.6rem;
+  margin: auto 2vw;
+  cursor: default;
+  max-width: 95vw;
+  width: max-content;
+  position: relative;
+}
+
+.closeButton {
+  all: unset;
+  box-sizing: border-box;
+  border: var(--smallBorder);
+  background-color: var(--background);
+  height: 1.2rem;
+  width: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 2.5rem;
+  padding: 1.2rem;
+  position: absolute;
+  right: 2.4rem;
+  top: 2.4rem;
+  z-index: 101;
+}
+
+.closeIcon {
+  fill: var(--iconColor);
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+
+.closeButton:focus {
+  outline: 1px solid var(--foreground);
+  background-color: var(--buttonHoverColor);
+}

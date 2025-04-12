@@ -4,5 +4,9 @@ import styles from "./page.module.css";
 import ToDo from "@/app/ui/To Do/toDo";
 
 export default function Page() {
-  return <ToDo />;
+  return (
+    <div className={styles.page}>
+      <ToDo />
+    </div>
+  );
 }

@@ -3,6 +3,8 @@
 :root {
   --wb: white;
   --bw: black;
+  --wbHard: rgb(255, 255, 255);
+  --bwHard: rgb(20, 20, 20);
   --pageBackground: white;
   --background: white;
   --foreground: black;
@@ -49,6 +51,8 @@ svg {
   :root {
     --wb: black;
     --bw: white;
+    --wbHard: rgb(20, 20, 20);
+    --bwHard: rgb(255, 255, 255);
     --pageBackground: rgb(30, 30, 30);
     --background: rgb(50, 50, 50);
     --foreground: white;
