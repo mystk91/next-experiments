@@ -49,7 +49,7 @@ export default function Modal({ children, closeFunction }: ModalProps) {
 
   return (
     <FocusTrap>
-      <div className={styles.backdrop} onClick={closeModal}>
+      <div className={styles.backdrop} /* onClick={closeModal} */> 
         <div className={styles.modal} role="dialog" aria-modal="true">
           <button
             className={styles.closeButton}

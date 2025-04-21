@@ -48,7 +48,6 @@ export function Task({
 
   function finishCompleting() {
     completeTask?.();
-    deleteTask?.();
   }
 
   function finishDeleting() {
@@ -101,22 +100,24 @@ export function Task({
                   variant="tertiary"
                   ariaLabel="Delete this task"
                   width={"smallest"}
-                  title="Delete this task"
+                  title="Delete task"
                   onClick={() => setShowConfirmDelete(true)}
                   style={{ width: "4.0rem", padding: "0" }}
                 >
                   <TrashIcon className={styles.icon} />
                 </Button>
-                <Button
-                  variant="tertiary"
-                  width="smallest"
-                  ariaLabel="Mark as complete"
-                  title="Mark as complete"
-                  onClick={finishCompleting}
-                  style={{ width: "4.0rem", padding: "0" }}
-                >
-                  <CheckmarkIcon className={styles.icon} />
-                </Button>
+                {status != "complete" && (
+                  <Button
+                    variant="tertiary"
+                    width="smallest"
+                    ariaLabel="Mark as complete"
+                    title="Mark as complete"
+                    onClick={finishCompleting}
+                    style={{ width: "4.0rem", padding: "0" }}
+                  >
+                    <CheckmarkIcon className={styles.icon} />
+                  </Button>
+                )}
               </div>
             </footer>
           </div>
@@ -124,36 +125,37 @@ export function Task({
       )}
 
       {showConfirmDelete && (
-        <FocusTrap>
-          <div className={styles.modal}>
-            <div className={styles.confirm_delete_wrapper}>
-              <div className={styles.confirm_delete_message}>
-                {`Delete `}
-                <div className={styles.bold}>{`"${name}"`}</div>
-                {`?`}
-              </div>
-              <div className={styles.confirm_delete_controls}>
-                <Button
-                  variant="tertiary"
-                  width="default"
-                  ariaLabel="Cancel deleting task"
-                  onClick={() => setShowConfirmDelete(false)}
-                >
-                  {`Cancel`}
-                </Button>
-                <Button
-                  variant="primary"
-                  width="default"
-                  ariaLabel="Confirm task deletion"
-                  onClick={finishDeleting}
-                  style={{ backgroundColor: "rgb(96, 96, 96)" }}
-                >
-                  {`Delete`}
-                </Button>
+        <Modal closeFunction={() => setShowConfirmDelete(false)}>
+          <div className={styles.confirm_delete_wrapper}>
+            <div className={styles.confirm_delete_message}>
+              {`Delete`}
+              <div>
+                <span>{`"`}</span>
+                <span className={styles.bold}>{name}</span>
+                <span>{`"?`}</span>
               </div>
             </div>
+            <div className={styles.confirm_delete_controls}>
+              <Button
+                variant="tertiary"
+                width="smallest"
+                ariaLabel="Cancel deleting task"
+                onClick={() => setShowConfirmDelete(false)}
+              >
+                {`Cancel`}
+              </Button>
+              <Button
+                variant="primary"
+                width="smallest"
+                ariaLabel="Confirm task deletion"
+                onClick={finishDeleting}
+                style={{ backgroundColor: "rgb(96, 96, 96)" }}
+              >
+                {`Delete`}
+              </Button>
+            </div>
           </div>
-        </FocusTrap>
+        </Modal>
       )}
     </div>
   );
@@ -169,10 +171,15 @@ export default function ToDo({ user, data }: ToDoProps) {
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const tasksRef = useRef<Task[]>([]);
+  function setTasksRef(point: Task[]) {
+    tasksRef.current = point;
+  }
   const checkboxRefs = useRef<(HTMLInputElement | null)[]>([]);
   const lastCheckboxChecked = useRef(0);
 
   //New Task Form
+  const formRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const initialFormData = {
     name: "",
@@ -186,7 +193,9 @@ export default function ToDo({ user, data }: ToDoProps) {
   const [formErrors, setFormErrors] = useState(initialErrors);
   //Handles form input changes
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -244,6 +253,7 @@ export default function ToDo({ user, data }: ToDoProps) {
   }
 
   function handleCheckboxClick(e: React.MouseEvent, index: number) {
+    console.log(index);
     checkboxRefs.current.some((checkbox) => {
       return checkbox?.checked === true;
     })
@@ -266,6 +276,38 @@ export default function ToDo({ user, data }: ToDoProps) {
     }
   }
 
+  function handleCheckboxKeydown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) {
+    if (e.key === "Enter") {
+      const checkbox = checkboxRefs.current[index];
+      if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+      }
+      if (e.shiftKey && checkboxRefs.current[index]?.checked) {
+        for (
+          let i = Math.min(index, lastCheckboxChecked.current);
+          i < Math.max(index, lastCheckboxChecked.current);
+          i++
+        ) {
+          const checkbox = checkboxRefs.current[i];
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        }
+      }
+      if (checkboxRefs.current[index]?.checked) {
+        lastCheckboxChecked.current = index;
+      }
+      checkboxRefs.current.some((checkbox) => {
+        return checkbox?.checked === true;
+      })
+        ? setShowDeleteButton(true)
+        : setShowDeleteButton(false);
+    }
+  }
+
   function deleteTasks() {
     const toBeDeleted = checkboxRefs.current
       .map((checkbox, index) => (checkbox?.checked === true ? index : -1))
@@ -283,6 +325,36 @@ export default function ToDo({ user, data }: ToDoProps) {
     setFormData(initialFormData);
     setFormErrors(initialErrors);
   }
+
+  function handleDescriptionKeyDown(
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      formRef.current?.requestSubmit();
+    }
+  }
+
+  const taskLabels = {
+    ["incomplete"]: "Current Tasks",
+    ["complete"]: "Completed Tasks",
+    ["onHold"]: "On Hold",
+  };
+  const taskGroups = tasks.reduce((groups, task, index) => {
+    const groupKey = taskLabels[task.status] ?? "Other Tasks";
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+    }
+    groups[groupKey].push({ task, index });
+    return groups;
+  }, {} as Record<string, { task: Task; index: number }[]>);
+  const groupOrder = ["Current Tasks", "Completed Tasks", "On Hold"];
+  const sortedTaskGroups = groupOrder
+    .filter((groupName) => taskGroups[groupName])
+    .map((groupName) => ({
+      groupName,
+      taskGroups: taskGroups[groupName],
+    }));
 
   return (
     <div className={styles.to_do}>
@@ -336,45 +408,69 @@ export default function ToDo({ user, data }: ToDoProps) {
           </div>
         )}
       </div>
-      {tasks.length > 0 && (
-        <ul className={styles.task_list}>
-          {tasks.map((item, index) => {
-            return (
-              <li className={styles.task_wrapper} key={item.id}>
-                {showDeleteMenu && (
-                  <div className={styles.selection_wrapper}>
-                    <input
-                      type={"checkbox"}
-                      className={styles.checkbox}
-                      ref={(el) => {
-                        checkboxRefs.current[index] = el;
-                      }}
-                      onClick={(e) => handleCheckboxClick(e, index)}
-                    />
-                    <span className={styles.checkmark}></span>
-                  </div>
-                )}
-                <Task
-                  name={item.name}
-                  description={item.description}
-                  status={item.status}
-                  lastUpdated={item.lastUpdated}
-                  deleteTask={() =>
-                    setTasks((prev) => [
-                      ...prev.slice(0, index),
-                      ...prev.slice(index + 1),
-                    ])
-                  }
-                />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <div className={styles.task_groups}>
+        {sortedTaskGroups.map(({ groupName, taskGroups }) => (
+          <div
+            className={classNames(styles.task_list_wrapper, styles[groupName])}
+            key={groupName}
+          >
+            <label className={styles.task_label} htmlFor={groupName}>
+              {groupName}
+            </label>
+            <ul className={styles.task_list} id={groupName}>
+              {taskGroups.map(({ task, index }) => (
+                <li className={styles.task_wrapper} key={task.id}>
+                  {showDeleteMenu && (
+                    <div className={styles.selection_wrapper}>
+                      <input
+                        type={"checkbox"}
+                        className={styles.checkbox}
+                        ref={(el) => {
+                          checkboxRefs.current[index] = el;
+                        }}
+                        onClick={(e) => handleCheckboxClick(e, index)}
+                        onKeyDown={(e) => handleCheckboxKeydown(e, index)}
+                      />
+                      <span className={styles.checkmark}></span>
+                    </div>
+                  )}
+                  <Task
+                    name={task.name}
+                    description={task.description}
+                    status={task.status}
+                    lastUpdated={task.lastUpdated}
+                    deleteTask={() =>
+                      setTasks((prev) => [
+                        ...prev.slice(0, index),
+                        ...prev.slice(index + 1),
+                      ])
+                    }
+                    completeTask={() => {
+                      const completedTask = tasks[index];
+                      completedTask.status = "complete";
+                      completedTask.lastUpdated = new Date();
+                      setTasks((prev) => [
+                        completedTask,
+                        ...prev.slice(0, index),
+                        ...prev.slice(index + 1),
+                      ]);
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
       {showForm && (
         <Modal closeFunction={closeNewTaskForm}>
           <div className={styles.new_task_wrapper}>
-            <form className={styles.new_task_form} onSubmit={submitNewTask}>
+            <form
+              className={styles.new_task_form}
+              onSubmit={submitNewTask}
+              ref={formRef}
+            >
               <div className={styles.input_container}>
                 <label htmlFor="name">{`Task Name`}</label>
                 <input
@@ -400,15 +496,15 @@ export default function ToDo({ user, data }: ToDoProps) {
               </div>
               <div className={styles.input_container}>
                 <label htmlFor="description">{`Description`}</label>
-                <input
+                <textarea
                   id="description"
                   name="description"
-                  type="text"
                   value={formData.description}
                   onChange={handleChange}
                   aria-describedby="descriptionError"
                   maxLength={1024}
                   className={styles.description_input}
+                  onKeyDown={handleDescriptionKeyDown}
                 />
                 {formErrors.name && (
                   <div
