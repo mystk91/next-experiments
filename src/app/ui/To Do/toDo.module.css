@@ -50,6 +50,10 @@
   padding: 0.8rem 0;
 }
 
+.task_list_wrapper.complete {
+  background-color: rgb(52, 113, 83);
+}
+
 .task_label {
   padding: 1.2rem;
 }
@@ -107,7 +111,7 @@
 .description_wrapper {
   display: flex;
   flex-direction: column;
-  row-gap: 1.2rem;
+  row-gap: 0.4rem;
 }
 
 .description {

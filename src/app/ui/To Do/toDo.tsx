@@ -17,6 +17,13 @@ type Task = {
   description: string;
   status: "complete" | "incomplete" | "onHold";
   lastUpdated: Date;
+  index: number;
+};
+
+type TaskGroup = {
+  label: string;
+  status: string;
+  tasks: Task[];
 };
 
 interface TaskProps {
@@ -171,10 +178,9 @@ export default function ToDo({ user, data }: ToDoProps) {
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const tasksRef = useRef<Task[]>([]);
-  function setTasksRef(point: Task[]) {
-    tasksRef.current = point;
-  }
+  const [sortedTasks, setSortedTasks] = useState<TaskGroup[]>();
+  const justSorted = useRef(false);
+
   const checkboxRefs = useRef<(HTMLInputElement | null)[]>([]);
   const lastCheckboxChecked = useRef(0);
 
@@ -236,24 +242,26 @@ export default function ToDo({ user, data }: ToDoProps) {
       description: formData.description,
       status: "incomplete",
       lastUpdated: new Date(),
+      index: 0,
     };
     setTasks((prev) => [task, ...prev.slice()]);
     closeNewTaskForm();
   }
 
+  //Opens the delete tasks menu
   function openDeleteMenu() {
-    //Does things to open the delete menu
+    lastCheckboxChecked.current = 0;
     setShowDeleteMenu(true);
   }
 
+  //Closes the delete tasks menu
   function closeDeleteMenu() {
-    //Need something clear out selected items
     setShowDeleteMenu(false);
     setShowDeleteButton(false);
   }
 
+  //Allows shift click selecting of checkboxes
   function handleCheckboxClick(e: React.MouseEvent, index: number) {
-    console.log(index);
     checkboxRefs.current.some((checkbox) => {
       return checkbox?.checked === true;
     })
@@ -276,6 +284,7 @@ export default function ToDo({ user, data }: ToDoProps) {
     }
   }
 
+  //Does identical things as handleCheckboxClick
   function handleCheckboxKeydown(
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number
@@ -308,6 +317,7 @@ export default function ToDo({ user, data }: ToDoProps) {
     }
   }
 
+  //Deletes all tasks selected
   function deleteTasks() {
     const toBeDeleted = checkboxRefs.current
       .map((checkbox, index) => (checkbox?.checked === true ? index : -1))
@@ -320,12 +330,14 @@ export default function ToDo({ user, data }: ToDoProps) {
     closeDeleteMenu();
   }
 
+  //Closes the add new task modal
   function closeNewTaskForm() {
     setShowForm(false);
     setFormData(initialFormData);
     setFormErrors(initialErrors);
   }
 
+  //Submits the form when user hits enter in the textarea
   function handleDescriptionKeyDown(
     e: React.KeyboardEvent<HTMLTextAreaElement>
   ) {
@@ -335,26 +347,47 @@ export default function ToDo({ user, data }: ToDoProps) {
     }
   }
 
-  const taskLabels = {
-    ["incomplete"]: "Current Tasks",
-    ["complete"]: "Completed Tasks",
-    ["onHold"]: "On Hold",
-  };
-  const taskGroups = tasks.reduce((groups, task, index) => {
-    const groupKey = taskLabels[task.status] ?? "Other Tasks";
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push({ task, index });
-    return groups;
-  }, {} as Record<string, { task: Task; index: number }[]>);
-  const groupOrder = ["Current Tasks", "Completed Tasks", "On Hold"];
-  const sortedTaskGroups = groupOrder
-    .filter((groupName) => taskGroups[groupName])
-    .map((groupName) => ({
-      groupName,
-      taskGroups: taskGroups[groupName],
-    }));
+  //Sorts the tasks when a change is made
+  function sortTasks() {
+    const tasksGroups: Record<string, TaskGroup> = {
+      incomplete: {
+        status: "incomplete",
+        label: "Current Tasks",
+        tasks: [],
+      },
+      complete: {
+        status: "complete",
+        label: "Completed Tasks",
+        tasks: [],
+      },
+      onHold: {
+        status: "onHold",
+        label: "On Hold",
+        tasks: [],
+      },
+    };
+    tasks.forEach((task) => {
+      tasksGroups[task.status].tasks.push(task);
+    });
+    const taskGroupsArr = Object.values(tasksGroups);
+    const newTasks: Task[] = [];
+    let index = 0;
+    taskGroupsArr.forEach((taskGroup) => {
+      taskGroup.tasks.forEach((task) => {
+        task.index = index;
+        index++;
+        newTasks.push(task);
+      });
+    });
+    justSorted.current = true;
+    setTasks(newTasks);
+    setSortedTasks(taskGroupsArr);
+  }
+
+  //Sorts the tasks when a change is made
+  useEffect(() => {
+    justSorted.current ? (justSorted.current = false) : sortTasks();
+  }, [tasks]);
 
   return (
     <div className={styles.to_do}>
@@ -408,59 +441,64 @@ export default function ToDo({ user, data }: ToDoProps) {
           </div>
         )}
       </div>
+
       <div className={styles.task_groups}>
-        {sortedTaskGroups.map(({ groupName, taskGroups }) => (
-          <div
-            className={classNames(styles.task_list_wrapper, styles[groupName])}
-            key={groupName}
-          >
-            <label className={styles.task_label} htmlFor={groupName}>
-              {groupName}
-            </label>
-            <ul className={styles.task_list} id={groupName}>
-              {taskGroups.map(({ task, index }) => (
-                <li className={styles.task_wrapper} key={task.id}>
-                  {showDeleteMenu && (
-                    <div className={styles.selection_wrapper}>
-                      <input
-                        type={"checkbox"}
-                        className={styles.checkbox}
-                        ref={(el) => {
-                          checkboxRefs.current[index] = el;
-                        }}
-                        onClick={(e) => handleCheckboxClick(e, index)}
-                        onKeyDown={(e) => handleCheckboxKeydown(e, index)}
-                      />
-                      <span className={styles.checkmark}></span>
-                    </div>
-                  )}
-                  <Task
-                    name={task.name}
-                    description={task.description}
-                    status={task.status}
-                    lastUpdated={task.lastUpdated}
-                    deleteTask={() =>
-                      setTasks((prev) => [
-                        ...prev.slice(0, index),
-                        ...prev.slice(index + 1),
-                      ])
-                    }
-                    completeTask={() => {
-                      const completedTask = tasks[index];
-                      completedTask.status = "complete";
-                      completedTask.lastUpdated = new Date();
-                      setTasks((prev) => [
-                        completedTask,
-                        ...prev.slice(0, index),
-                        ...prev.slice(index + 1),
-                      ]);
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {sortedTasks
+          ?.filter(({ tasks }) => tasks.length > 0)
+          .map(({ label, status, tasks }) => (
+            <div
+              className={classNames(styles.task_list_wrapper, styles[status])}
+              key={label}
+            >
+              <label className={styles.task_label}>{label}</label>
+              <ul className={styles.task_list}>
+                {tasks.map((task) => (
+                  <li className={styles.task_wrapper} key={task.id}>
+                    {showDeleteMenu && (
+                      <div className={styles.selection_wrapper}>
+                        <input
+                          type={"checkbox"}
+                          className={styles.checkbox}
+                          ref={(el) => {
+                            checkboxRefs.current[task.index] = el;
+                          }}
+                          onClick={(e) => handleCheckboxClick(e, task.index)}
+                          onKeyDown={(e) =>
+                            handleCheckboxKeydown(e, task.index)
+                          }
+                        />
+                        <span className={styles.checkmark}></span>
+                      </div>
+                    )}
+                    <Task
+                      name={task.name}
+                      description={task.description}
+                      status={task.status}
+                      lastUpdated={task.lastUpdated}
+                      deleteTask={() =>
+                        setTasks((prev) => [
+                          ...prev.slice(0, task.index),
+                          ...prev.slice(task.index + 1),
+                        ])
+                      }
+                      completeTask={() => {
+                        console.log("completion started");
+                        const completedTask = { ...tasks[task.index] };
+                        completedTask.status = "complete";
+                        completedTask.lastUpdated = new Date();
+                        console.log(completedTask);
+                        setTasks((prev) => [
+                          completedTask,
+                          ...prev.slice(0, task.index),
+                          ...prev.slice(task.index + 1),
+                        ]);
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
       </div>
 
       {showForm && (
