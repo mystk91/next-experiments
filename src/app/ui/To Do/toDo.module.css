@@ -23,7 +23,7 @@
   row-gap: 0.8rem;
 }
 
-.delete_tasks_wrapper {
+.manage_tasks_wrapper {
   width: 100%;
   display: flex;
   justify-content: flex-end;

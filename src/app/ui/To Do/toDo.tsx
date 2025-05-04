@@ -36,6 +36,7 @@ interface TaskProps {
   deleteTask?: () => void;
   completeTask?: () => void;
   moveTask?: () => void;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
 export function Task({
@@ -47,6 +48,7 @@ export function Task({
   updateTask,
   deleteTask,
   completeTask,
+  onDragStart,
   moveTask,
 }: TaskProps) {
   const [showFull, setShowFull] = useState(false);
@@ -77,7 +79,12 @@ export function Task({
   }
 
   return (
-    <div className={classNames(styles.task, styles[status])} ref={ref}>
+    <div
+      className={classNames(styles.task, styles[status])}
+      ref={ref}
+      draggable={true}
+      onDragStart={onDragStart}
+    >
       <Button
         variant="secondary"
         width="full"
@@ -177,6 +184,7 @@ export default function ToDo({ user, data }: ToDoProps) {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
+  const [showMenuButtons, setShowMenuButtons] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [sortedTasks, setSortedTasks] = useState<TaskGroup[]>();
   const justSorted = useRef(false);
@@ -251,6 +259,7 @@ export default function ToDo({ user, data }: ToDoProps) {
   //Opens the delete tasks menu
   function openDeleteMenu() {
     lastCheckboxChecked.current = 0;
+    setShowMenuButtons(false);
     setShowDeleteMenu(true);
   }
 
@@ -258,6 +267,7 @@ export default function ToDo({ user, data }: ToDoProps) {
   function closeDeleteMenu() {
     setShowDeleteMenu(false);
     setShowDeleteButton(false);
+    setShowMenuButtons(true);
   }
 
   //Allows shift click selecting of checkboxes
@@ -389,6 +399,55 @@ export default function ToDo({ user, data }: ToDoProps) {
     justSorted.current ? (justSorted.current = false) : sortTasks();
   }, [tasks]);
 
+  function handleDragStart(e: React.DragEvent<HTMLDivElement>, task: Task) {
+    e.dataTransfer.setData(
+      "text/plain",
+      JSON.stringify({ id: task.id, status: task.status })
+    );
+  }
+
+  function handleDrop(e: React.DragEvent, dropStatus: string) {
+    e.preventDefault();
+    const draggedData = JSON.parse(e.dataTransfer.getData("text/plain"));
+    const draggedId = draggedData.id;
+
+    const draggedTaskIndex = tasks.findIndex((task) => task.id === draggedId);
+    const draggedTask = tasks[draggedTaskIndex];
+
+    // Stops drops across different status categories
+    if (draggedTask.status !== dropStatus) return;
+
+    const groupTasks =
+      sortedTasks?.find((g) => g.status === dropStatus)?.tasks || [];
+    const container = e.currentTarget;
+    const taskElements = Array.from(container.querySelectorAll("li"));
+    const mouseY = e.clientY;
+
+    let closestIndex = 0;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    taskElements.forEach((el, i) => {
+      const rect = el.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+      const distance = Math.abs(mouseY - centerY);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = i;
+      }
+    });
+
+    const groupIndexes = groupTasks.map((task) => task.index);
+    const draggedGlobalIndex = draggedTask.index;
+    const targetGlobalIndex = groupIndexes[closestIndex];
+
+    if (draggedGlobalIndex === targetGlobalIndex) return;
+
+    const reordered = [...tasks];
+    const [movedItem] = reordered.splice(draggedGlobalIndex, 1);
+    reordered.splice(targetGlobalIndex, 0, movedItem);
+    setTasks(reordered);
+  }
+
   return (
     <div className={styles.to_do}>
       <div className={styles.controls}>
@@ -398,8 +457,8 @@ export default function ToDo({ user, data }: ToDoProps) {
           style={{ backgroundColor: "rgb(96, 96, 96)" }}
         >{`Add New Task`}</Button>
         {tasks.length > 0 && (
-          <div className={styles.delete_tasks_wrapper}>
-            {showDeleteMenu ? (
+          <div className={styles.manage_tasks_wrapper}>
+            {showDeleteMenu && (
               <div className={styles.buttons_wrapper}>
                 {showDeleteButton && (
                   <Button
@@ -425,12 +484,13 @@ export default function ToDo({ user, data }: ToDoProps) {
                   {`Cancel`}
                 </Button>
               </div>
-            ) : (
+            )}
+            {showMenuButtons && (
               <div className={styles.buttons_wrapper}>
                 <Button
                   variant="tertiary"
-                  ariaLabel="Manage tasks"
-                  title="Manage tasks"
+                  ariaLabel="Delete tasks menu"
+                  title="Delete tasks"
                   onClick={openDeleteMenu}
                   width="smallest"
                 >
@@ -441,7 +501,6 @@ export default function ToDo({ user, data }: ToDoProps) {
           </div>
         )}
       </div>
-
       <div className={styles.task_groups}>
         {sortedTasks
           ?.filter(({ tasks }) => tasks.length > 0)
@@ -451,7 +510,11 @@ export default function ToDo({ user, data }: ToDoProps) {
               key={label}
             >
               <label className={styles.task_label}>{label}</label>
-              <ul className={styles.task_list}>
+              <ul
+                className={styles.task_list}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDrop(e, status)}
+              >
                 {tasks.map((task) => (
                   <li className={styles.task_wrapper} key={task.id}>
                     {showDeleteMenu && (
@@ -475,6 +538,7 @@ export default function ToDo({ user, data }: ToDoProps) {
                       description={task.description}
                       status={task.status}
                       lastUpdated={task.lastUpdated}
+                      onDragStart={(e) => handleDragStart(e, task)}
                       deleteTask={() =>
                         setTasks((prev) => [
                           ...prev.slice(0, task.index),
