@@ -1,14 +1,15 @@
 "use client";
+"use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import styles from "./toDo.module.css";
+import styles from "./page.module.css";
 import classNames from "classnames";
-import Button from "../Buttons/Button Set 1/button";
+import Button from "@/app/ui/Buttons/Button Set 1/button";
 import TrashIcon from "./SvgTrash";
 import CheckmarkIcon from "./SvgCheckmark";
 import { uniqueId } from "lodash";
-import Modal from "@/app/ui/Modals/Modal-1/modal";
+import Modal from "@/app/ui/Modals/Modal Versatile/modal";
 
 type Task = {
   id: string;
@@ -179,7 +180,7 @@ interface ToDoProps {
   data?: {};
 }
 
-export default function ToDo({ user, data }: ToDoProps) {
+export default function Page({ user, data }: ToDoProps) {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
@@ -448,184 +449,193 @@ export default function ToDo({ user, data }: ToDoProps) {
   }
 
   return (
-    <div className={styles.to_do}>
-      <div className={styles.controls}>
-        <Button
-          variant="primary"
-          onClick={() => setShowForm(true)}
-          style={{ backgroundColor: "rgb(96, 96, 96)" }}
-        >{`Add New Task`}</Button>
-        {tasks.length > 0 && (
-          <div className={styles.manage_tasks_wrapper}>
-            {showDeleteMenu && (
-              <div className={styles.buttons_wrapper}>
-                {showDeleteButton && (
+    <div className={styles.page}>
+      <div className={styles.to_do}>
+        <div className={styles.controls}>
+          <Button
+            variant="primary"
+            onClick={() => setShowForm(true)}
+            style={{ backgroundColor: "rgb(96, 96, 96)" }}
+          >{`Add New Task`}</Button>
+          {tasks.length > 0 && (
+            <div className={styles.manage_tasks_wrapper}>
+              {showDeleteMenu && (
+                <div className={styles.buttons_wrapper}>
+                  {showDeleteButton && (
+                    <Button
+                      variant="secondary"
+                      width="smallest"
+                      ariaLabel="Delete tasks"
+                      onClick={deleteTasks}
+                      style={{
+                        borderColor: "rgb(96, 96, 96)",
+                        color: "var(--bw)",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {`Delete`}
+                    </Button>
+                  )}
                   <Button
-                    variant="secondary"
+                    variant="tertiary"
+                    ariaLabel="Cancel deleting tasks"
+                    onClick={closeDeleteMenu}
                     width="smallest"
-                    ariaLabel="Delete tasks"
-                    onClick={deleteTasks}
-                    style={{
-                      borderColor: "rgb(96, 96, 96)",
-                      color: "var(--bw)",
-                      fontWeight: "500",
-                    }}
                   >
-                    {`Delete`}
+                    {`Cancel`}
                   </Button>
-                )}
-                <Button
-                  variant="tertiary"
-                  ariaLabel="Cancel deleting tasks"
-                  onClick={closeDeleteMenu}
-                  width="smallest"
+                </div>
+              )}
+              {showMenuButtons && (
+                <div className={styles.buttons_wrapper}>
+                  <Button
+                    variant="tertiary"
+                    ariaLabel="Delete tasks menu"
+                    title="Delete tasks"
+                    onClick={openDeleteMenu}
+                    width="smallest"
+                  >
+                    <TrashIcon height={"100%"} className={styles.icon} />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className={styles.task_groups}>
+          {sortedTasks
+            ?.filter(({ tasks }) => tasks.length > 0)
+            .map(({ label, status, tasks }) => (
+              <div
+                className={classNames(styles.task_list_wrapper, styles[status])}
+                key={label}
+              >
+                <label className={styles.task_label}>{label}</label>
+                <ul
+                  className={styles.task_list}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleDrop(e, status)}
                 >
-                  {`Cancel`}
-                </Button>
+                  {tasks.map((task) => (
+                    <li className={styles.task_wrapper} key={task.id}>
+                      {showDeleteMenu && (
+                        <div className={styles.selection_wrapper}>
+                          <input
+                            type={"checkbox"}
+                            className={styles.checkbox}
+                            ref={(el) => {
+                              checkboxRefs.current[task.index] = el;
+                            }}
+                            onClick={(e) => handleCheckboxClick(e, task.index)}
+                            onKeyDown={(e) =>
+                              handleCheckboxKeydown(e, task.index)
+                            }
+                          />
+                          <span className={styles.checkmark}></span>
+                        </div>
+                      )}
+                      <Task
+                        name={task.name}
+                        description={task.description}
+                        status={task.status}
+                        lastUpdated={task.lastUpdated}
+                        onDragStart={(e) => handleDragStart(e, task)}
+                        deleteTask={() =>
+                          setTasks((prev) => [
+                            ...prev.slice(0, task.index),
+                            ...prev.slice(task.index + 1),
+                          ])
+                        }
+                        completeTask={() => {
+                          console.log("completion started");
+                          const completedTask = { ...tasks[task.index] };
+                          completedTask.status = "complete";
+                          completedTask.lastUpdated = new Date();
+                          console.log(completedTask);
+                          setTasks((prev) => [
+                            completedTask,
+                            ...prev.slice(0, task.index),
+                            ...prev.slice(task.index + 1),
+                          ]);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
-            {showMenuButtons && (
-              <div className={styles.buttons_wrapper}>
+            ))}
+        </div>
+
+        {showForm && (
+          <Modal
+            closeFunction={closeNewTaskForm}
+            closeButton={true}
+            closeOnBackdropClick={false}
+            transparent={false}
+            extraTopPadding={true}
+            centered={false}
+          >
+            <div className={styles.new_task_wrapper}>
+              <form
+                className={styles.new_task_form}
+                onSubmit={submitNewTask}
+                ref={formRef}
+              >
+                <div className={styles.input_container}>
+                  <label htmlFor="name">{`Task Name`}</label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    ref={inputRef}
+                    aria-describedby="nameError"
+                    maxLength={96}
+                    className={styles.name_input}
+                  />
+                  {formErrors.name && (
+                    <div
+                      className={styles.error}
+                      id="nameError"
+                      aria-live="polite"
+                    >
+                      {formErrors.name}
+                    </div>
+                  )}
+                </div>
+                <div className={styles.input_container}>
+                  <label htmlFor="description">{`Description`}</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    aria-describedby="descriptionError"
+                    maxLength={1024}
+                    className={styles.description_input}
+                    onKeyDown={handleDescriptionKeyDown}
+                  />
+                  {formErrors.name && (
+                    <div
+                      className={styles.error}
+                      id="descriptionError"
+                      aria-live="polite"
+                    >
+                      {formErrors.description}
+                    </div>
+                  )}
+                </div>
                 <Button
-                  variant="tertiary"
-                  ariaLabel="Delete tasks menu"
-                  title="Delete tasks"
-                  onClick={openDeleteMenu}
-                  width="smallest"
-                >
-                  <TrashIcon height={"100%"} className={styles.icon} />
-                </Button>
-              </div>
-            )}
-          </div>
+                  variant={"primary"}
+                  type={"submit"}
+                  style={{ backgroundColor: "rgb(96, 96, 96)" }}
+                >{`Add Task`}</Button>
+              </form>
+            </div>
+          </Modal>
         )}
       </div>
-      <div className={styles.task_groups}>
-        {sortedTasks
-          ?.filter(({ tasks }) => tasks.length > 0)
-          .map(({ label, status, tasks }) => (
-            <div
-              className={classNames(styles.task_list_wrapper, styles[status])}
-              key={label}
-            >
-              <label className={styles.task_label}>{label}</label>
-              <ul
-                className={styles.task_list}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDrop(e, status)}
-              >
-                {tasks.map((task) => (
-                  <li className={styles.task_wrapper} key={task.id}>
-                    {showDeleteMenu && (
-                      <div className={styles.selection_wrapper}>
-                        <input
-                          type={"checkbox"}
-                          className={styles.checkbox}
-                          ref={(el) => {
-                            checkboxRefs.current[task.index] = el;
-                          }}
-                          onClick={(e) => handleCheckboxClick(e, task.index)}
-                          onKeyDown={(e) =>
-                            handleCheckboxKeydown(e, task.index)
-                          }
-                        />
-                        <span className={styles.checkmark}></span>
-                      </div>
-                    )}
-                    <Task
-                      name={task.name}
-                      description={task.description}
-                      status={task.status}
-                      lastUpdated={task.lastUpdated}
-                      onDragStart={(e) => handleDragStart(e, task)}
-                      deleteTask={() =>
-                        setTasks((prev) => [
-                          ...prev.slice(0, task.index),
-                          ...prev.slice(task.index + 1),
-                        ])
-                      }
-                      completeTask={() => {
-                        console.log("completion started");
-                        const completedTask = { ...tasks[task.index] };
-                        completedTask.status = "complete";
-                        completedTask.lastUpdated = new Date();
-                        console.log(completedTask);
-                        setTasks((prev) => [
-                          completedTask,
-                          ...prev.slice(0, task.index),
-                          ...prev.slice(task.index + 1),
-                        ]);
-                      }}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-      </div>
-
-      {showForm && (
-        <Modal closeFunction={closeNewTaskForm}>
-          <div className={styles.new_task_wrapper}>
-            <form
-              className={styles.new_task_form}
-              onSubmit={submitNewTask}
-              ref={formRef}
-            >
-              <div className={styles.input_container}>
-                <label htmlFor="name">{`Task Name`}</label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  ref={inputRef}
-                  aria-describedby="nameError"
-                  maxLength={96}
-                  className={styles.name_input}
-                />
-                {formErrors.name && (
-                  <div
-                    className={styles.error}
-                    id="nameError"
-                    aria-live="polite"
-                  >
-                    {formErrors.name}
-                  </div>
-                )}
-              </div>
-              <div className={styles.input_container}>
-                <label htmlFor="description">{`Description`}</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  aria-describedby="descriptionError"
-                  maxLength={1024}
-                  className={styles.description_input}
-                  onKeyDown={handleDescriptionKeyDown}
-                />
-                {formErrors.name && (
-                  <div
-                    className={styles.error}
-                    id="descriptionError"
-                    aria-live="polite"
-                  >
-                    {formErrors.description}
-                  </div>
-                )}
-              </div>
-              <Button
-                variant={"primary"}
-                type={"submit"}
-                style={{ backgroundColor: "rgb(96, 96, 96)" }}
-              >{`Add Task`}</Button>
-            </form>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
