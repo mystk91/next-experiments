@@ -1,0 +1,19 @@
+.page {
+  display: flex;
+  width: 100vw;
+  padding-top: 4rem;
+  align-items: center;
+  flex-direction: column;
+  row-gap: 4rem;
+}
+
+.input_container{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  row-gap: 2rem;
+  width: 36rem;
+  border: var(--smallBorder);
+  padding: 1.8rem 4rem;
+}
+

@@ -9,7 +9,7 @@
   --background: white;
   --foreground: black;
   --borderColor: rgb(50, 50, 50);
-  --smallBorder: 0.5px solid var(--borderColor);
+  --smallBorder: 0.05rem solid var(--borderColor);
   --softBackground: rgb(245, 245, 245);
   --softForeground: rgb(95, 95, 95);
   --buttonBackground: rgb(240, 240, 240);
@@ -57,7 +57,7 @@ svg {
     --background: rgb(50, 50, 50);
     --foreground: white;
     --borderColor: white;
-    --smallBorder: 0.5px solid var(--borderColor);
+    --smallBorder: 0.05rem solid var(--borderColor);
     --softBackground: rgb(95, 95, 95);
     --softForeground: rgb(245, 245, 245);
     --buttonBackground: rgb(50, 50, 50);

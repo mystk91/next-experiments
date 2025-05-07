@@ -1,26 +1,33 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  FormEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import styles from "./component.module.css";
+import styles from "./multi-signup.module.css";
 
-interface ComponentProps {
-  style?: {};
+interface SignupProps {
+  style?: React.CSSProperties;
 }
 
-export default function Component({ style }: ComponentProps) {
-  const [property, setProperty] = useState<JSX.Element>(<div>Welcome!</div>);
-  const propRef = useRef<string>("initialValue");
-  function setPropRef(point: string): void {
-    propRef.current = point;
-  }
+export default function Signup({ style }: SignupProps) {
+  //For which panel we are currently showing
+  const [screen, setScreen] = useState<"email" | "password" | "success">(
+    "email"
+  );
+
+  function submitEmail(e: FormEvent) {}
+
+  function submitPassword(e: FormEvent) {}
 
   //componentDidMount, runs when component mounts, then componentDismount
   useEffect(() => {
     return () => {};
   }, []);
-  //componentDidUpdate, runs after render
-  useEffect(() => {}, [property]);
 
   return <div style={{ ...style }}></div>;
 }
