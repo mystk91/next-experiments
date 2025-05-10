@@ -4,8 +4,9 @@ import styles from "./page.module.css";
 import Multi from "@/app/ui/Login/Multistep-Signup/multi-signup";
 
 export default function Page() {
-  return;
-  <div className={styles.page}>
-    <Multi />
-  </div>;
+  return (
+    <div className={styles.page}>
+      <Multi />
+    </div>
+  );
 }
