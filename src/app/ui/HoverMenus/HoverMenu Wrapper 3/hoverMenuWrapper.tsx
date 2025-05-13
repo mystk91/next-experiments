@@ -38,7 +38,7 @@ interface HoverMenuProps {
   ariaLabel?: string;
 }
 
-export default function HoverMenuProps({
+export default function HoverMenu({
   children,
   content,
   direction = "bottom",
@@ -102,13 +102,22 @@ export default function HoverMenuProps({
   useEffect(() => {
     if (hoverMenuRef.current && childrenRef.current) {
       let offsetCopy = { ...offsetStyles };
-      const offsets = {
-        top: (hoverMenuRef.current.clientHeight + borderWidth * 10) / 10,
-        bottom: (hoverMenuRef.current.clientHeight + borderWidth * 10) / 10,
-        right: (hoverMenuRef.current.clientWidth + borderWidth * 10) / 10,
-        left: (hoverMenuRef.current.clientWidth + borderWidth * 10) / 10,
+      const oppositeDirections: Record<
+        "top" | "right" | "bottom" | "left",
+        "top" | "right" | "bottom" | "left"
+      > = {
+        top: "bottom",
+        right: "left",
+        bottom: "top",
+        left: "right",
       };
-      offsetCopy[direction] = `-${offsets[direction]}rem`;
+      const offsets = {
+        top: (childrenRef.current.clientHeight) / 10,
+        bottom: (childrenRef.current.clientHeight) / 10,
+        right: (childrenRef.current.clientWidth) / 10,
+        left: (childrenRef.current.clientWidth) / 10,
+      };
+      offsetCopy[oppositeDirections[direction]] = `${offsets[direction]}rem`;
       if (shift !== "middle") {
         const oppositeDirections: Record<
           "top" | "right" | "bottom" | "left",
@@ -148,107 +157,49 @@ export default function HoverMenuProps({
   }, [active]);
 
   //Creates the styles for the arrow
-  function arrowBeforeStyle() {
-    let borderWidths = {
-      top: [`${arrowLength}rem`, `${arrowWidth}rem`, `0`, `${arrowWidth}rem`],
-      right: [`${arrowWidth}rem`, `${arrowLength}rem`, `${arrowWidth}rem`, `0`],
-      bottom: [
-        `0`,
-        `${arrowWidth}rem`,
-        `${arrowLength}rem`,
-        `${arrowWidth}rem`,
-      ],
-      left: [`${arrowWidth}rem`, `0`, `${arrowWidth}rem`, `${arrowLength}rem`],
-    };
-    let borderColors = {
-      top: [borderColor, `transparent`, `transparent`, `transparent`],
-      right: [`transparent`, borderColor, `transparent`, `transparent`],
-      bottom: [`transparent`, `transparent`, borderColor, `transparent`],
-      left: [`transparent`, `transparent`, `transparent`, borderColor],
-    };
-    if (!childrenRef.current || !hoverMenuRef.current) return {};
-    const shifts = centeredArrow
-      ? {
-          middle: {},
-          top: {
-            bottom: `${
-              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
-            }rem`,
-          },
-          right: {
-            right: `${
-              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
-            }rem`,
-          },
-          bottom: {
-            top: `${
-              childrenRef.current.clientHeight / 20 - arrowWidth - shiftAmount
-            }rem`,
-          },
-          left: {
-            left: `${
-              childrenRef.current.clientWidth / 20 - arrowWidth - shiftAmount
-            }rem`,
-          },
-        }
-      : {
-          middle: {},
-          top: {
-            bottom: `${hoverMenuRef.current.clientHeight / 100}rem`,
-          },
-          right: {
-            right: `${hoverMenuRef.current.clientWidth / 100}rem`,
-          },
-          bottom: {
-            top: `${hoverMenuRef.current.clientHeight / 100}rem`,
-          },
-          left: {
-            left: `${hoverMenuRef.current.clientWidth / 100}rem`,
-          },
-        };
+  function getArrowStyle(position: "before" | "after") {
+    const isAfter = position === "after";
 
-    return {
-      borderWidth: borderWidths[direction].join(" "),
-      borderColor: borderColors[direction].join(" "),
-      ...shifts[arrowPosition],
-    };
-  }
+    const length = isAfter
+      ? arrowLength - (arrowLength * borderWidth) / arrowWidth
+      : arrowLength;
+    const width = isAfter ? arrowWidth - borderWidth : arrowWidth;
 
-  //Creates the styles for the arrow
-  function arrowAfterStyle() {
-    let borderWidths = {
+    const borderWidths = {
+      top: [`${length}rem`, `${width}rem`, `0`, `${width}rem`],
+      right: [`${width}rem`, `${length}rem`, `${width}rem`, `0`],
+      bottom: [`0`, `${width}rem`, `${length}rem`, `${width}rem`],
+      left: [`${width}rem`, `0`, `${width}rem`, `${length}rem`],
+    };
+
+    const borderColors = {
       top: [
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
+        isAfter ? backgroundColor : borderColor,
+        "transparent",
+        "transparent",
+        "transparent",
       ],
       right: [
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
+        "transparent",
+        isAfter ? backgroundColor : borderColor,
+        "transparent",
+        "transparent",
       ],
       bottom: [
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
+        "transparent",
+        "transparent",
+        isAfter ? backgroundColor : borderColor,
+        "transparent",
       ],
       left: [
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
+        "transparent",
+        "transparent",
+        "transparent",
+        isAfter ? backgroundColor : borderColor,
       ],
     };
-    let borderColors = {
-      top: [backgroundColor, `transparent`, `transparent`, `transparent`],
-      right: [`transparent`, backgroundColor, `transparent`, `transparent`],
-      bottom: [`transparent`, `transparent`, backgroundColor, `transparent`],
-      left: [`transparent`, `transparent`, `transparent`, backgroundColor],
-    };
-    let transforms = {
+
+    const transforms = {
       middle: "",
       top: `translateY(-${borderWidth}rem)`,
       bottom: `translateY(${borderWidth}rem)`,
@@ -257,7 +208,8 @@ export default function HoverMenuProps({
     };
 
     if (!childrenRef.current || !hoverMenuRef.current) return {};
-    const shifts = centeredArrow
+
+    const shiftBase = centeredArrow
       ? {
           middle: {},
           top: {
@@ -300,8 +252,8 @@ export default function HoverMenuProps({
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
-      transform: transforms[arrowPosition],
-      ...shifts[arrowPosition],
+      ...(isAfter && { transform: transforms[arrowPosition] }),
+      ...shiftBase[arrowPosition],
     };
   }
 
@@ -338,11 +290,11 @@ export default function HoverMenuProps({
               <>
                 <div
                   className={styles.arrow_before}
-                  style={arrowBeforeStyle()}
+                  style={getArrowStyle("before")}
                 ></div>
                 <div
                   className={styles.arrow_after}
-                  style={arrowAfterStyle()}
+                  style={getArrowStyle("after")}
                 ></div>
               </>
             ) : null}

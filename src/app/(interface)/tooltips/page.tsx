@@ -15,15 +15,16 @@ export default function Page() {
       }}
     >
       <Tooltip
-        message="We can also make move our tooltip"
+        message="This is a message"
         direction="left"
         borderRadius={0.8}
         borderWidth={0.1}
         arrow={true}
         arrowLength={2.0}
-        arrowWidth={0.8}
-        arrowPosition="top"
-        shift="bottom"
+        arrowWidth={0.6}
+        arrowPosition="middle"
+        shift="middle"
+        fontSize={1.6}
       >
         <Card
           height="40.0rem"

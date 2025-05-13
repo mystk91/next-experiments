@@ -9,15 +9,15 @@ import React, {
 import styles from "./tooltip.module.css";
 import classNames from "classnames";
 
-/*  Creates a basic tooltip for a parent element, has modifiable attributes. All units in rem.
- *    ref - takes a ref from a parent element
+/*  Creates a basic tooltip for its child components, has modifiable attributes. All units in rem.
+ *    children - the elements which the tooltip appears on
  *    direction - the direction which the tooltip will appear relative to its children
  *    arrow? - adds an arrow to the tooltip pointing towards the child elements
  *    arrowPosition? - the horizontal or vertical position of the arrow, should be perpendicular of "direction"
  *    shift?         - shifts the tooltip towards one side of its children, should be opposite of "arrowPosition"
  */
 interface TooltipProps {
-  ref: React.RefObject<HTMLElement>;
+  children: React.ReactNode;
   message: string;
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
@@ -39,7 +39,7 @@ interface TooltipProps {
 }
 
 export default function Tooltip({
-  ref,
+  children,
   message = "",
   direction = "bottom",
   offset = 0.0,
@@ -69,6 +69,7 @@ export default function Tooltip({
   });
 
   const tooltipRef = useRef<null | HTMLDivElement>(null);
+  const childrenRef = useRef<null | HTMLDivElement>(null);
   const [appear, setAppear] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,25 +91,18 @@ export default function Tooltip({
     timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
-  //Adds hover events to our parent element and clears timer
+  //Clears timer when we dismount
   useEffect(() => {
-    const targetRef = ref.current;
-    if (!targetRef) return;
-    targetRef.addEventListener("mouseenter", addTooltip);
-    targetRef.addEventListener("mouseleave", removeTooltip);
-
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      targetRef.removeEventListener("mouseenter", addTooltip);
-      targetRef.removeEventListener("mouseleave", removeTooltip);
     };
   }, []);
 
   //Moves the tooltip to one of the sides when it becomes active
   useEffect(() => {
-    if (tooltipRef.current && ref.current) {
+    if (tooltipRef.current && childrenRef.current) {
       let offsetCopy = { ...offsetStyles };
       const offsets = {
         top:
@@ -140,19 +134,19 @@ export default function Tooltip({
       if (shift !== "middle") {
         const shifts = {
           top:
-            ref.current.clientHeight / 2 -
+            childrenRef.current.clientHeight / 2 -
             tooltipRef.current.clientHeight / 10 -
             arrowWidth * 10,
           bottom:
-            ref.current.clientHeight / 2 -
+            childrenRef.current.clientHeight / 2 -
             tooltipRef.current.clientHeight / 10 -
             arrowWidth * 10,
           right:
-            ref.current.clientWidth / 2 -
+            childrenRef.current.clientWidth / 2 -
             tooltipRef.current.clientWidth / 10 -
             arrowWidth * 10,
           left:
-            ref.current.clientWidth / 2 -
+            childrenRef.current.clientWidth / 2 -
             tooltipRef.current.clientWidth / 10 -
             arrowWidth * 10,
         };
@@ -166,27 +160,6 @@ export default function Tooltip({
           left: "right",
         };
         offsetCopy[shiftDirections[shift]] = `${shifts[shift] / 10}rem`;
-      } else {
-        const shifts = {
-          top:
-            ref.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 2,
-          left:
-            ref.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 2
-        };
-        const shiftDirections: Record<
-          "top" | "right" | "bottom" | "left",
-          "top" | "left"
-        > = {
-          top: "left",
-          right: "top",
-          bottom: "left",
-          left: "top",
-        };
-        offsetCopy[shiftDirections[direction]] = `${
-          shifts[shiftDirections[direction]] / 10
-        }rem`;
       }
       setOffsetStyles(offsetCopy);
     }
@@ -266,40 +239,57 @@ export default function Tooltip({
     };
   }
 
-  return active ? (
-    <div
-      ref={tooltipRef}
-      className={classNames(styles.tooltip, {
-        [styles.appear]: appear,
-      })}
-      data-direction={direction}
-      data-arrowposition={arrowPosition}
-      role="tooltip"
-      style={{
-        backgroundColor: backgroundColor,
-        border: `${borderWidth}rem solid ${borderColor}`,
-        borderRadius: `${borderRadius}rem`,
-        ...offsetStyles,
-      }}
-    >
-      {arrow ? (
-        <>
-          <div className={styles.arrow_before} style={arrowBeforeStyle()}></div>
-          <div className={styles.arrow_after} style={arrowAfterStyle()}></div>
-        </>
-      ) : null}
+  return (
+    <div className={styles.tooltip_wrapper}>
+      {active && (
+        <div
+          ref={tooltipRef}
+          className={classNames(styles.tooltip, {
+            [styles.appear]: appear,
+          })}
+          data-direction={direction}
+          data-arrowposition={arrowPosition}
+          role="tooltip"
+          style={{
+            backgroundColor: backgroundColor,
+            border: `${borderWidth}rem solid ${borderColor}`,
+            borderRadius: `${borderRadius}rem`,
+            ...offsetStyles,
+          }}
+        >
+          {arrow ? (
+            <>
+              <div
+                className={styles.arrow_before}
+                style={arrowBeforeStyle()}
+              ></div>
+              <div
+                className={styles.arrow_after}
+                style={arrowAfterStyle()}
+              ></div>
+            </>
+          ) : null}
+          <div
+            className={styles.tooltip_message}
+            style={{
+              minHeight: height,
+              width: width,
+              maxWidth: maxWidth,
+              fontSize: `${fontSize}rem`,
+              color: color,
+            }}
+          >
+            {message}
+          </div>
+        </div>
+      )}
       <div
-        className={styles.tooltip_message}
-        style={{
-          minHeight: height,
-          width: width,
-          maxWidth: maxWidth,
-          fontSize: `${fontSize}rem`,
-          color: color,
-        }}
+        onMouseOver={addTooltip}
+        onMouseLeave={removeTooltip}
+        ref={childrenRef}
       >
-        {message}
+        {children}
       </div>
     </div>
-  ) : null;
+  );
 }

@@ -37,33 +37,33 @@
 }
 
 .hoverMenu[data-direction="top"] .arrow_before {
-  top: 99.9%;
+  top: 99.8%;
 }
 
 .hoverMenu[data-direction="top"] .arrow_after {
-  top: 99.9%;
+  top: 99.8%;
 }
 
 .hoverMenu[data-direction="right"] .arrow_before {
-  right: 99.9%;
+  right: 99.8%;
 }
 
 .hoverMenu[data-direction="right"] .arrow_after {
-  right: 99.9%;
+  right: 99.8%;
 }
 
 .hoverMenu[data-direction="bottom"] .arrow_before {
-  bottom: 99.9%;
+  bottom: 99.8%;
 }
 
 .hoverMenu[data-direction="bottom"] .arrow_after {
-  bottom: 99.9%;
+  bottom: 99.8%;
 }
 
 .hoverMenu[data-direction="left"] .arrow_before {
-  left: 99.9%;
+  left: 99.8%;
 }
 
 .hoverMenu[data-direction="left"] .arrow_after {
-  left: 99.9%;
+  left: 99.8%;
 }

@@ -9,14 +9,14 @@ import React, {
 import styles from "./tooltip.module.css";
 import classNames from "classnames";
 
-/*  Creates a tooltip for a parent element that will follow your cursor while above its child components. It has modifiable attributes. All units in rem.
- *    ref - takes a ref from a parent element
+/*  Creates a tooltip that will follow your cursor while above its child components. It has modifiable attributes. All units in rem.
+ *    children - the elements which the tooltip appears on
  *    direction - the direction which the tooltip will appear relative to its children
  *    arrow? - adds an arrow to the tooltip pointing towards the child elements
  *    arrowPosition? - the horizontal or vertical position of the arrow, we can also use this to align the tooltip
  */
 interface TooltipProps {
-  ref: React.RefObject<HTMLElement>;
+  children: React.ReactNode;
   message: string;
   direction?: "none" | "top" | "right" | "bottom" | "left";
   offset?: number;
@@ -37,7 +37,7 @@ interface TooltipProps {
 }
 
 export default function Tooltip({
-  ref,
+  children,
   message = "",
   direction = "none",
   offset = 0.0,
@@ -59,11 +59,11 @@ export default function Tooltip({
   const [active, setActive] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState({ x: 0, y: 0 });
   const tooltipRef = useRef<null | HTMLDivElement>(null);
+  const childrenRef = useRef<null | HTMLDivElement>(null);
   const [appear, setAppear] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  //Adds the tooltip after an optional delay
   function addTooltip() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -71,8 +71,7 @@ export default function Tooltip({
     setActive(true);
     timerRef.current = setTimeout(() => setAppear(true), 1 + delay);
   }
-  //Removes the tooltip
-  function removeTooltip() {
+  function removeTooltip(e: React.MouseEvent) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -80,10 +79,9 @@ export default function Tooltip({
     timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
-  //Moves the tooltip
-  function moveTooltip(e: MouseEvent) {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
+  function moveTooltip(e: React.MouseEvent) {
+    if (!childrenRef.current) return;
+    const rect = childrenRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     if (x >= 0 || x < rect.width || y >= 0 || y < rect.height) {
@@ -94,20 +92,11 @@ export default function Tooltip({
     }
   }
 
-  //Adds hover events to our parent element and clears timer
   useEffect(() => {
-    const targetRef = ref.current;
-    if (!targetRef) return;
-    targetRef.addEventListener("mouseenter", addTooltip);
-    targetRef.addEventListener("mousemove", moveTooltip);
-    targetRef.addEventListener("mouseleave", removeTooltip);
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      targetRef.removeEventListener("mouseenter", addTooltip);
-      targetRef.removeEventListener("mousemove", moveTooltip);
-      targetRef.removeEventListener("mouseleave", removeTooltip);
     };
   }, []);
 
@@ -142,6 +131,8 @@ export default function Tooltip({
         bottom: 12 + calcOffset,
         left: 0 - alignments[arrowPosition],
       };
+      console.log(`x: ${offsetX[direction]} y: ${offsetY[direction]}`);
+
       setTooltipOffset({ x: offsetX[direction], y: offsetY[direction] });
     }
     return () => {};
@@ -223,41 +214,59 @@ export default function Tooltip({
     };
   }
 
-  return active ? (
-    <div
-      ref={tooltipRef}
-      className={classNames(styles.tooltip, {
-        [styles.appear]: appear,
-      })}
-      data-direction={direction}
-      data-arrowposition={arrowPosition}
-      role="tooltip"
-      style={{
-        top: mousePosition.y + tooltipOffset.y,
-        left: mousePosition.x + tooltipOffset.x,
-        backgroundColor: backgroundColor,
-        border: `${borderWidth}rem solid ${borderColor}`,
-        borderRadius: `${borderRadius}rem`,
-      }}
-    >
-      {arrow ? (
-        <>
-          <div className={styles.arrow_before} style={arrowBeforeStyle()}></div>
-          <div className={styles.arrow_after} style={arrowAfterStyle()}></div>
-        </>
-      ) : null}
+  return (
+    <div className={styles.tooltip_wrapper}>
+      {active && (
+        <div
+          ref={tooltipRef}
+          className={classNames(styles.tooltip, {
+            [styles.appear]: appear,
+          })}
+          data-direction={direction}
+          data-arrowposition={arrowPosition}
+          role="tooltip"
+          style={{
+            top: mousePosition.y + tooltipOffset.y,
+            left: mousePosition.x + tooltipOffset.x,
+            backgroundColor: backgroundColor,
+            border: `${borderWidth}rem solid ${borderColor}`,
+            borderRadius: `${borderRadius}rem`,
+          }}
+        >
+          {arrow ? (
+            <>
+              <div
+                className={styles.arrow_before}
+                style={arrowBeforeStyle()}
+              ></div>
+              <div
+                className={styles.arrow_after}
+                style={arrowAfterStyle()}
+              ></div>
+            </>
+          ) : null}
+          <div
+            className={styles.tooltip_message}
+            style={{
+              minHeight: height,
+              width: width,
+              maxWidth: maxWidth,
+              fontSize: `${fontSize}rem`,
+              color: color,
+            }}
+          >
+            {message}
+          </div>
+        </div>
+      )}
       <div
-        className={styles.tooltip_message}
-        style={{
-          minHeight: height,
-          width: width,
-          maxWidth: maxWidth,
-          fontSize: `${fontSize}rem`,
-          color: color,
-        }}
+        ref={childrenRef}
+        onMouseOver={addTooltip}
+        onMouseMove={moveTooltip}
+        onMouseLeave={removeTooltip}
       >
-        {message}
+        {children}
       </div>
     </div>
-  ) : null;
+  );
 }

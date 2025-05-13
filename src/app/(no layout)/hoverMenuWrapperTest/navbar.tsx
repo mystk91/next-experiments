@@ -156,7 +156,8 @@ export default function Navbar() {
             arrowWidth={1.0}
             arrowPosition="right"
             backgroundColor="white"
-            centeredArrow={false}
+            borderWidth={0.05}
+            centeredArrow={true}
           >
             <li
               className={classNames(styles.navItem, {

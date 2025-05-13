@@ -60,6 +60,7 @@ export default function Tooltip({
   arrowWidth = 0.0,
 }: TooltipProps) {
   const [active, setActive] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [offsetStyles, setOffsetStyles] = useState({
     top: "",
     right: "",
@@ -69,7 +70,6 @@ export default function Tooltip({
 
   const tooltipRef = useRef<null | HTMLDivElement>(null);
   const childrenRef = useRef<null | HTMLDivElement>(null);
-  const [appear, setAppear] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   //Adds the tooltip after an optional delay
@@ -78,7 +78,7 @@ export default function Tooltip({
       clearTimeout(timerRef.current);
     }
     setActive(true);
-    timerRef.current = setTimeout(() => setAppear(true), 1 + delay);
+    timerRef.current = setTimeout(() => setVisible(true), 1 + delay);
   }
 
   //Removes the tooltip
@@ -86,7 +86,7 @@ export default function Tooltip({
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    setAppear(false);
+    setVisible(false);
     timerRef.current = setTimeout(() => setActive(false), 500);
   }
 
@@ -99,132 +99,98 @@ export default function Tooltip({
     };
   }, []);
 
-  //Moves the tooltip to one of the sides when it becomes active
   useEffect(() => {
-    if (tooltipRef.current && childrenRef.current) {
-      let offsetCopy = { ...offsetStyles };
-      const offsets = {
-        top:
-          (tooltipRef.current.clientHeight +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        bottom:
-          (tooltipRef.current.clientHeight +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        right:
-          (tooltipRef.current.clientWidth +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
-        left:
-          (tooltipRef.current.clientWidth +
-            arrowLength * 10 +
-            offset * 10 +
-            borderWidth * 10) /
-          10,
+    if (!tooltipRef.current || !childrenRef.current) return;
+
+    const tooltip = tooltipRef.current;
+    //parallel vs perpendicular directions
+    const tooltipParallel =
+      direction === "left" || direction === "right"
+        ? tooltip.clientWidth
+        : tooltip.clientHeight;
+
+    const offsetAmount =
+      (tooltipParallel + arrowLength * 10 + offset * 10 + borderWidth * 10) /
+      10;
+    const updated = {
+      top: "",
+      right: "",
+      bottom: "",
+      left: "",
+      [direction]: `-${offsetAmount}rem`,
+    };
+    if (shift !== "middle") {
+      const children = childrenRef.current;
+
+      const tooltipPerpendicular =
+        direction === "left" || direction === "right"
+          ? tooltip.clientHeight
+          : tooltip.clientWidth;
+
+      const childrenPerpendicular =
+        direction === "left" || direction === "right"
+          ? children.clientHeight
+          : children.clientWidth;
+      const shiftAmount =
+        childrenPerpendicular / 20 -
+        (tooltipPerpendicular * 0.15) / 10 -
+        arrowWidth;
+      const oppositeDirections: Record<string, string> = {
+        top: "bottom",
+        bottom: "top",
+        left: "right",
+        right: "left",
       };
-      offsetCopy[direction] = `-${offsets[direction]}rem`;
-      if (shift !== "middle") {
-        const shifts = {
-          top:
-            childrenRef.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          bottom:
-            childrenRef.current.clientHeight / 2 -
-            tooltipRef.current.clientHeight / 10 -
-            arrowWidth * 10,
-          right:
-            childrenRef.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 10 -
-            arrowWidth * 10,
-          left:
-            childrenRef.current.clientWidth / 2 -
-            tooltipRef.current.clientWidth / 10 -
-            arrowWidth * 10,
-        };
-        const shiftDirections: Record<
-          "top" | "right" | "bottom" | "left",
-          "top" | "right" | "bottom" | "left"
-        > = {
-          top: "bottom",
-          right: "left",
-          bottom: "top",
-          left: "right",
-        };
-        offsetCopy[shiftDirections[shift]] = `${shifts[shift] / 10}rem`;
+      if (oppositeDirections[shift]) {
+        updated[oppositeDirections[shift]] = `${shiftAmount}rem`;
       }
-      setOffsetStyles(offsetCopy);
     }
-    return () => {};
+
+    setOffsetStyles(updated);
   }, [active]);
 
-  //Creates the styles for the arrow
-  function arrowBeforeStyle() {
-    let borderWidths = {
-      top: [`${arrowLength}rem`, `${arrowWidth}rem`, `0`, `${arrowWidth}rem`],
-      right: [`${arrowWidth}rem`, `${arrowLength}rem`, `${arrowWidth}rem`, `0`],
-      bottom: [
-        `0`,
-        `${arrowWidth}rem`,
-        `${arrowLength}rem`,
-        `${arrowWidth}rem`,
-      ],
-      left: [`${arrowWidth}rem`, `0`, `${arrowWidth}rem`, `${arrowLength}rem`],
-    };
-    let borderColors = {
-      top: [borderColor, `transparent`, `transparent`, `transparent`],
-      right: [`transparent`, borderColor, `transparent`, `transparent`],
-      bottom: [`transparent`, `transparent`, borderColor, `transparent`],
-      left: [`transparent`, `transparent`, `transparent`, borderColor],
-    };
-    return {
-      borderWidth: borderWidths[direction].join(" "),
-      borderColor: borderColors[direction].join(" "),
-    };
-  }
+  //Sets the style for the arrow
+  function getArrowStyle(position: "before" | "after") {
+    const isBefore = position === "before";
+    const length = isBefore
+      ? arrowLength
+      : arrowLength - (arrowLength * borderWidth) / arrowWidth;
 
-  //Creates the styles for the arrow
-  function arrowAfterStyle() {
-    let borderWidths = {
+    const width = isBefore ? arrowWidth : arrowWidth - borderWidth;
+
+    const borderWidths = {
+      top: [`${length}rem`, `${width}rem`, `0`, `${width}rem`],
+      right: [`${width}rem`, `${length}rem`, `${width}rem`, `0`],
+      bottom: [`0`, `${width}rem`, `${length}rem`, `${width}rem`],
+      left: [`${width}rem`, `0`, `${width}rem`, `${length}rem`],
+    };
+    const borderColors = {
       top: [
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
+        isBefore ? borderColor : backgroundColor,
+        "transparent",
+        "transparent",
+        "transparent",
       ],
       right: [
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
+        "transparent",
+        isBefore ? borderColor : backgroundColor,
+        "transparent",
+        "transparent",
       ],
       bottom: [
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
-        `${arrowWidth - borderWidth}rem`,
+        "transparent",
+        "transparent",
+        isBefore ? borderColor : backgroundColor,
+        "transparent",
       ],
       left: [
-        `${arrowWidth - borderWidth}rem`,
-        `0`,
-        `${arrowWidth - borderWidth}rem`,
-        `${arrowLength - (arrowLength * borderWidth) / arrowWidth}rem`,
+        "transparent",
+        "transparent",
+        "transparent",
+        isBefore ? borderColor : backgroundColor,
       ],
     };
-    let borderColors = {
-      top: [backgroundColor, `transparent`, `transparent`, `transparent`],
-      right: [`transparent`, backgroundColor, `transparent`, `transparent`],
-      bottom: [`transparent`, `transparent`, backgroundColor, `transparent`],
-      left: [`transparent`, `transparent`, `transparent`, backgroundColor],
-    };
-    let transforms = {
+    const transforms = {
       middle: "",
       top: `translateY(${borderWidth}rem)`,
       bottom: `translateY(-${borderWidth}rem)`,
@@ -234,7 +200,7 @@ export default function Tooltip({
     return {
       borderWidth: borderWidths[direction].join(" "),
       borderColor: borderColors[direction].join(" "),
-      transform: transforms[arrowPosition],
+      ...(isBefore ? {} : { transform: transforms[arrowPosition] }),
     };
   }
 
@@ -244,7 +210,7 @@ export default function Tooltip({
         <div
           ref={tooltipRef}
           className={classNames(styles.tooltip, {
-            [styles.appear]: appear,
+            [styles.visible]: visible,
           })}
           data-direction={direction}
           data-arrowposition={arrowPosition}
@@ -260,11 +226,11 @@ export default function Tooltip({
             <>
               <div
                 className={styles.arrow_before}
-                style={arrowBeforeStyle()}
+                style={getArrowStyle("before")}
               ></div>
               <div
                 className={styles.arrow_after}
-                style={arrowAfterStyle()}
+                style={getArrowStyle("after")}
               ></div>
             </>
           ) : null}

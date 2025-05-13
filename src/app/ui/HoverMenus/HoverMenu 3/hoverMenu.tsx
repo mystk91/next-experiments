@@ -38,7 +38,7 @@ interface HoverMenuProps {
   ariaLabel?: string;
 }
 
-export default function HoverMenuProps({
+export default function HoverMenu({
   parentRef,
   content,
   direction = "bottom",
