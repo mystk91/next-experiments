@@ -1,3 +1,4 @@
+"use client"
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
@@ -6,20 +7,24 @@ import CardChild from "@/app/ui/Cards/Tooltip as Child Test/card";
 import HoverMenuWrapper from "@/app/ui//HoverMenus/HoverMenu Wrapper/hoverMenuWrapper";
 import HoverMenuBetter from "@/app/ui/HoverMenus/HoverMenu Wrapper 2/hoverMenuWrapper";
 import HoverMenuFlexible from "@/app/ui/HoverMenus/HoverMenu Wrapper 3/hoverMenuWrapper";
-import SimpleHover from "@/app/ui/HoverMenus/HoverMenu Wrapper Simple/hoverMenu";
+import SimpleHover from "@/app/ui/HoverMenus/Hover Panel/hoverPanel";
 import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
+import { useRef } from "react";
+
 
 export function SomeCard() {
   return <div className={styles.some_card}>{`These are words`}</div>;
 }
 
+
 export default function Page() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
+      <div className={styles.container} ref={containerRef}>
         <SimpleHover
-          content={<SomeCard />}
+          panel={<SomeCard />}
           /*
           content={<Navbar />}
           content={
@@ -30,11 +35,13 @@ export default function Page() {
             />
           }
             */
-          direction="bottom"
-          offset={4}
-          align="left"
+
+          direction="right"
+          offset={-2}
+          align="top"
           shiftPixels={0}
-          shiftPercent={0}
+          shiftPercent={10}
+          containerRef={containerRef}
         >
           <Card
             height="40.0rem"

@@ -1,0 +1,15 @@
+.expandable {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 100;
+}
+
+.menu.appear {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
