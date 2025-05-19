@@ -9,8 +9,12 @@ import classNames from "classnames";
  *    direction      - the direction which the panel will appear
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
- *    shiftPixels?   - shifts the panel in rem
- *    shiftPercent?  - shifts the panel by a percent of the child's width / height, 0 to 100
+ *    shiftRem?      - shifts the panel in rem
+ *    shiftPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
+ *    role?          - the role of the panel
+ *    ariaLabelChildren? - the aria label for the children
+ *    ariaLabelPanel?   - the aria label for the panel
+ *    closingTime?    - the time it takes for the panel to close, in ms
  *    containerRef   - confines the panel to the boundaries of a container
  */
 interface HoverPanelProps {
@@ -19,12 +23,13 @@ interface HoverPanelProps {
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   align?: "middle" | "top" | "right" | "left" | "bottom";
-  shiftPixels?: number;
+  shiftRem?: number;
   shiftPercent?: number;
   role?: string;
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
-  containerRef?: React.RefObject<any>;
+  closingTime?: number;
+  containerRef?: React.RefObject<HTMLElement>;
 }
 const positionObject = {
   top: "",
@@ -44,14 +49,15 @@ export default function HoverPanel({
   direction = "bottom",
   offset = 0.0,
   align = "middle",
-  shiftPixels = 0.0,
+  shiftRem = 0.0,
   shiftPercent = 0,
   ariaLabelChildren = "Expandable hover area",
   ariaLabelPanel = "Revealed panel",
+  closingTime = 300,
   containerRef,
 }: HoverPanelProps) {
   const [active, setActive] = useState(false);
-  const [appear, setAppear] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const childrenRef = useRef<null | HTMLDivElement>(null);
   const panelRef = useRef<null | HTMLDivElement>(null);
@@ -59,22 +65,23 @@ export default function HoverPanel({
   const [position, setPosition] = useState(positionObject);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  //Adds the panel
+
+  // Adds the panel
   function addPanel() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+    setClosing(false);
     setActive(true);
-    timerRef.current = setTimeout(() => setAppear(true), 50);
   }
-
-  //Removes the panel
+  // Removes the panel
   function removePanel() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    setAppear(false);
-    timerRef.current = setTimeout(() => setActive(false), 300);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setClosing(true);
+    timerRef.current = setTimeout(() => {
+      setActive(false);
+      setClosing(false);
+    }, closingTime);
   }
 
   //Clears the timer
@@ -91,12 +98,11 @@ export default function HoverPanel({
     if (active) {
       calculatePosition();
       if (containerRef) {
-        const handleEvents = () => calculatePosition();
-        window.addEventListener("resize", handleEvents);
-        window.addEventListener("scroll", handleEvents);
+        window.addEventListener("resize", calculatePosition);
+        window.addEventListener("scroll", calculatePosition);
         return () => {
-          window.removeEventListener("resize", handleEvents);
-          window.removeEventListener("scroll", handleEvents);
+          window.removeEventListener("resize", calculatePosition);
+          window.removeEventListener("scroll", calculatePosition);
         };
       }
     }
@@ -126,7 +132,7 @@ export default function HoverPanel({
     }
 
     // Moves the panel to one of the sides
-    positionCopy[direction] = `0`;
+    positionCopy[direction] = `0rem`;
     positionCopy.transform += `translate${
       direction === "top" || direction === "bottom" ? `Y` : `X`
     }(${direction === "top" || direction === "left" ? `-` : ``}100%) `;
@@ -135,30 +141,35 @@ export default function HoverPanel({
       // Aligns the panel to the center
       positionCopy[
         direction === "top" || direction === "bottom" ? `left` : `top`
-      ] = `50%`;
+      ] = `${50 + shiftPercent}%`;
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `X` : `Y`
       }(-50%) `;
     } else {
       // Aligns the panel to a side
-      positionCopy[align] = `${shiftPercent}%`;
+      positionCopy[align] = `${
+        (align === "top" || align === "left" ? 1 : -1) * shiftPercent
+      }%`;
+    }
+
+    // Shifts the panel
+    if (shiftRem) {
       positionCopy.transform += `translate${
-        align === "top" || align === "bottom" ? `Y` : `X`
-      }(${
-        align === "right" || align === "bottom" ? `-` : ``
-      }${shiftPixels}rem) `;
+        direction === "top" || direction === "bottom" ? `X` : `Y`
+      }(${shiftRem}rem) `;
     }
 
     // Moves panel if it goes outside the container's bounds
     if (containerRef) {
-      if (!panelRef.current || !childrenRef.current) return;
+      if (!panelRef.current || !childrenRef.current || !containerRef.current)
+        return;
       Object.assign(panelRef.current.style, positionCopy);
       const child = childrenRef.current.getBoundingClientRect();
       const container = containerRef.current.getBoundingClientRect();
       const panel = panelRef.current.getBoundingClientRect();
 
       if (direction === "top" || direction === "bottom") {
-        //Moves panel to the bottom if it goe out of bounds to the top
+        //Moves panel to the bottom if it goes out of bounds to the top
         if (direction === "top") {
           if (panel.top < container.top || panel.top < -child.height / 8) {
             positionCopy.transform += `translateY(200%) `;
@@ -224,6 +235,13 @@ export default function HoverPanel({
     }
   }
 
+  // Tells the panel to play its closing animation
+  panel = React.isValidElement(panel)
+    ? React.cloneElement(panel as React.ReactElement<{ closing?: boolean }>, {
+        closing: closing,
+      })
+    : panel;
+
   return (
     <div
       ref={childrenRef}
@@ -236,9 +254,7 @@ export default function HoverPanel({
       {children}
       {active && (
         <div
-          className={classNames(styles.panel, {
-            [styles.appear]: appear,
-          })}
+          className={classNames(styles.panel)}
           ref={panelRef}
           role={`region`}
           aria-label={ariaLabelPanel}

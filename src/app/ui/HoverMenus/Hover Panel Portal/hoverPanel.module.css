@@ -1,0 +1,16 @@
+.expandable {
+  position: relative;
+}
+
+.panel {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 500;
+}
+
+.panel.appear {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
