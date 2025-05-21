@@ -3,29 +3,39 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import styles from "./hoverPanel.module.css";
 import classNames from "classnames";
+import { debounce } from "lodash";
 
 /*  Displays a panel when you hover over an element
  *    children       - the elements which the hover event will be given to
  *    panel          - the inputed panel that will be displayed on hover
+ *    portalTarget   - the ref to which the panel will be appended to
  *    direction      - the direction which the panel will appear
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
  *    shiftPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
- *    portalTarget   - the ref to which the panel will be appended to
+ *    fadeEffect?    - plays the default fade in / out animation, default true
+ *    closingTime?   - the time it takes for the panel to close, in ms
+ *    boundaryDetection? - moves the panel if it goes out of bounds of the portalTarget, default true
+ *    panelRole?          - the role of the panel
+ *    ariaLabelChildren? - the aria label for the children
+ *    ariaLabelPanel?   - the aria label for the panel
  */
-interface HoverPanelProps {
+interface HoverPanelPortalProps {
   children: React.ReactNode;
   panel: React.ReactNode;
+  portalTarget: React.RefObject<HTMLElement>;
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   align?: "middle" | "top" | "right" | "left" | "bottom";
   shiftRem?: number;
   shiftPercent?: number;
-  role?: string;
+  fadeEffect?: boolean;
+  closingTime?: number;
+  boundaryDetection?: boolean;
+  panelRole?: string;
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
-  portalTarget?: React.RefObject<HTMLElement>;
 }
 const positionObject = {
   top: "",
@@ -37,7 +47,7 @@ const positionObject = {
   transform: "",
 };
 
-export default function HoverPanel({
+export default function HoverPanelPortal({
   children,
   panel,
   portalTarget,
@@ -46,25 +56,48 @@ export default function HoverPanel({
   align = "middle",
   shiftRem = 0.0,
   shiftPercent = 0,
+  fadeEffect = true,
+  closingTime = 300,
+  boundaryDetection = true,
+  panelRole = "region",
   ariaLabelChildren = "Expandable hover area",
   ariaLabelPanel = "Revealed panel",
-}: HoverPanelProps) {
+}: HoverPanelPortalProps) {
   const [active, setActive] = useState(false);
-  const [appear, setAppear] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const childrenRef = useRef<null | HTMLDivElement>(null);
   const panelRef = useRef<null | HTMLDivElement>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  //Adds the panel
+  //Clears the timer
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  // Adds the panel
   function addPanel() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+    setClosing(false);
     setActive(true);
-    timerRef.current = setTimeout(() => setAppear(true), 50);
+  }
+  // Removes the panel
+  function removePanel() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setClosing(true);
+    timerRef.current = setTimeout(() => {
+      setActive(false);
+      setClosing(false);
+    }, closingTime);
   }
 
+  // Removes the panel when the mouse leaves our hover area
   function handleMouseLeave(e: React.MouseEvent) {
     const target = e.relatedTarget as Node | null;
     if (
@@ -76,36 +109,40 @@ export default function HoverPanel({
     removePanel();
   }
 
-  //Removes the panel
-  function removePanel() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    setAppear(false);
-    timerRef.current = setTimeout(() => setActive(false), 300);
-  }
-
-  //Clears the timer
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
   //Moves the panel to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
       calculatePosition();
-      window.addEventListener("resize", calculatePosition);
-      window.addEventListener("scroll", calculatePosition);
+      window.addEventListener("resize", debouncedCalculatePosition);
+      window.addEventListener("scroll", debouncedCalculatePosition);
       return () => {
-        window.removeEventListener("resize", calculatePosition);
-        window.removeEventListener("scroll", calculatePosition);
+        window.removeEventListener("resize", debouncedCalculatePosition);
+        window.removeEventListener("scroll", debouncedCalculatePosition);
       };
     }
   }, [active]);
+
+  // Calculates the position of the panel when the window is resized
+  const debouncedCalculatePosition = useCallback(
+    debounce(
+      () => {
+        calculatePosition();
+      },
+      100,
+      { leading: true, trailing: false }
+    ),
+    [portalTarget]
+  );
+
+  // Watches the portal target for changes in size, and recalculates the position
+  useEffect(() => {
+    if (!portalTarget?.current) return;
+    const observer = new ResizeObserver(() => {
+      calculatePosition();
+    });
+    observer.observe(portalTarget.current);
+    return () => observer.disconnect();
+  }, [portalTarget]);
 
   //Calculate the position for the panel to appear
   function calculatePosition() {
@@ -216,79 +253,94 @@ export default function HoverPanel({
       }(${shiftRem}rem) `;
     }
 
-    // Moves panel if it goes outside the container's bounds
-    Object.assign(panelRef.current.style, positionCopy);
-    panel = panelRef.current.getBoundingClientRect();
-    if (direction === "top" || direction === "bottom") {
-      //Moves panel to the bottom if it goe out of bounds to the top
-      if (direction === "top") {
-        if (panel.top < container.top || panel.top < -child.height / 8) {
-          positionCopy.transform += `translateY(${
-            (child.height + panel.height) / 10
-          }rem) `;
-          if (offset < 0) {
-            positionCopy.transform += `translateY(${2 * offset}rem) `;
-          } else {
-            positionCopy.paddingTop = positionCopy.paddingBottom;
-            positionCopy.paddingBottom = ``;
+    if (boundaryDetection) {
+      // Moves panel if it goes outside the container's bounds
+      Object.assign(panelRef.current.style, positionCopy);
+      panel = panelRef.current.getBoundingClientRect();
+      if (direction === "top" || direction === "bottom") {
+        //Moves panel to the bottom if it goes out of bounds to the top
+        if (direction === "top") {
+          if (panel.top < container.top || panel.top < -child.height / 8) {
+            positionCopy.transform += `translateY(${
+              (child.height + panel.height) / 10
+            }rem) `;
+            if (offset < 0) {
+              positionCopy.transform += `translateY(${2 * offset}rem) `;
+            } else {
+              positionCopy.paddingTop = positionCopy.paddingBottom;
+              positionCopy.paddingBottom = ``;
+            }
           }
         }
-      }
-      // Moves panel right / left if it goes out of bounds to right / left
-      let translateX = 0;
-      if (panel.right > container.right) {
-        translateX = container.right - panel.right;
-      }
-      if (panel.left + translateX < container.left) {
-        translateX = container.left - panel.left;
-      }
-      positionCopy.transform += `translateX(${translateX / 10}rem)`;
-    } else {
-      // Moves panel to the bottom if it goes out of bounds to right / left
-      if (panel.left < container.left || panel.right > container.right) {
-        positionCopy.transform = ``;
-        if (offset < 0) {
-          positionCopy.transform += `translateY(${offset}rem) `;
-        } else if (offset) {
-          positionCopy.paddingLeft = ``;
-          positionCopy.paddingRight = ``;
-          positionCopy.paddingTop = `${offset}rem`;
-        }
-
-        const anchorPoint = anchorPoints[`bottom`];
-        positionCopy.top = anchorPoint.top;
-        positionCopy.left = anchorPoint.left;
-
-        positionCopy.transform += `translateX(${
-          ((child.left + child.right) / 2 - container.left - panel.width / 2) /
-          10
-        }rem) `;
-        Object.assign(panelRef.current.style, positionCopy);
-        panel = panelRef.current.getBoundingClientRect();
-
+        // Moves panel right / left if it goes out of bounds to right / left
         let translateX = 0;
-
         if (panel.right > container.right) {
           translateX = container.right - panel.right;
         }
         if (panel.left + translateX < container.left) {
           translateX = container.left - panel.left;
         }
-        positionCopy.transform += `translateX(${translateX / 10}rem) `;
+        positionCopy.transform += `translateX(${translateX / 10}rem)`;
       } else {
-        // Moves panel up / down if it goes out of bounds to top / bottom
-        let translateY = 0;
-        if (panel.bottom > container.bottom) {
-          translateY = container.bottom - panel.bottom;
+        // Moves panel to the bottom if it goes out of bounds to right / left
+        if (panel.left < container.left || panel.right > container.right) {
+          positionCopy.transform = ``;
+          if (offset < 0) {
+            positionCopy.transform += `translateY(${offset}rem) `;
+          } else if (offset) {
+            positionCopy.paddingLeft = ``;
+            positionCopy.paddingRight = ``;
+            positionCopy.paddingTop = `${offset}rem`;
+          }
+
+          const anchorPoint = anchorPoints[`bottom`];
+          positionCopy.top = anchorPoint.top;
+          positionCopy.left = anchorPoint.left;
+
+          positionCopy.transform += `translateX(${
+            ((child.left + child.right) / 2 -
+              container.left -
+              panel.width / 2) /
+            10
+          }rem) `;
+          Object.assign(panelRef.current.style, positionCopy);
+          panel = panelRef.current.getBoundingClientRect();
+
+          let translateX = 0;
+
+          if (panel.right > container.right) {
+            translateX = container.right - panel.right;
+          }
+          if (panel.left + translateX < container.left) {
+            translateX = container.left - panel.left;
+          }
+          positionCopy.transform += `translateX(${translateX / 10}rem) `;
+        } else {
+          // Moves panel up / down if it goes out of bounds to top / bottom
+          let translateY = 0;
+          if (panel.bottom > container.bottom) {
+            translateY = container.bottom - panel.bottom;
+          }
+          if (panel.top + translateY < container.top) {
+            translateY = container.top - panel.top;
+          }
+          positionCopy.transform += `translateY(${translateY / 10}rem) `;
         }
-        if (panel.top + translateY < container.top) {
-          translateY = container.top - panel.top;
-        }
-        positionCopy.transform += `translateY(${translateY / 10}rem) `;
       }
     }
     Object.assign(panelRef.current.style, positionCopy);
   }
+
+  // Tells the panel to play its closing animation by using the triggerCloseAnimation prop
+  // This has to be set up in the panel component
+  panel = React.isValidElement(panel)
+    ? React.cloneElement(
+        panel as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
+        {
+          triggerCloseAnimation: closing,
+        }
+      )
+    : panel;
 
   return (
     <>
@@ -297,7 +349,6 @@ export default function HoverPanel({
         aria-expanded={active}
         onMouseOver={addPanel}
         onMouseLeave={handleMouseLeave}
-        onClick={active ? removePanel : addPanel}
         className={styles.expandable}
         aria-label={ariaLabelChildren}
       >
@@ -308,10 +359,11 @@ export default function HoverPanel({
         createPortal(
           <div
             className={classNames(styles.panel, {
-              [styles.appear]: appear,
+              [styles.appear]: fadeEffect,
+              [styles.closing]: closing && fadeEffect,
             })}
             ref={panelRef}
-            role={`region`}
+            role={panelRole}
             aria-label={ariaLabelPanel}
             onMouseLeave={handleMouseLeave}
           >

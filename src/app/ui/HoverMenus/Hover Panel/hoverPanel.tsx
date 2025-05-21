@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./hoverPanel.module.css";
 import classNames from "classnames";
+import { debounce } from "lodash";
 
 /*  Displays a panel when you hover over an element
  *    children       - the elements which the hover event will be given to
@@ -11,10 +12,11 @@ import classNames from "classnames";
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
  *    shiftPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
- *    role?          - the role of the panel
+ *    fadeEffect?    - plays the default fade in / out animation, default true
+ *    closingTime?    - the time it takes for the panel to close, in ms
+ *    panelRole?          - the role of the panel
  *    ariaLabelChildren? - the aria label for the children
  *    ariaLabelPanel?   - the aria label for the panel
- *    closingTime?    - the time it takes for the panel to close, in ms
  *    containerRef   - confines the panel to the boundaries of a container
  */
 interface HoverPanelProps {
@@ -25,10 +27,11 @@ interface HoverPanelProps {
   align?: "middle" | "top" | "right" | "left" | "bottom";
   shiftRem?: number;
   shiftPercent?: number;
-  role?: string;
+  fadeEffect?: boolean;
+  closingTime?: number;
+  panelRole?: string;
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
-  closingTime?: number;
   containerRef?: React.RefObject<HTMLElement>;
 }
 const positionObject = {
@@ -51,8 +54,10 @@ export default function HoverPanel({
   align = "middle",
   shiftRem = 0.0,
   shiftPercent = 0,
+  fadeEffect = true,
   ariaLabelChildren = "Expandable hover area",
   ariaLabelPanel = "Revealed panel",
+  panelRole = "region",
   closingTime = 300,
   containerRef,
 }: HoverPanelProps) {
@@ -65,6 +70,14 @@ export default function HoverPanel({
   const [position, setPosition] = useState(positionObject);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  //Clears the timer
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   // Adds the panel
   function addPanel() {
@@ -84,29 +97,42 @@ export default function HoverPanel({
     }, closingTime);
   }
 
-  //Clears the timer
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
   //Moves the panel to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
       calculatePosition();
       if (containerRef) {
-        window.addEventListener("resize", calculatePosition);
-        window.addEventListener("scroll", calculatePosition);
+        window.addEventListener("resize", debouncedCalculatePosition);
+        window.addEventListener("scroll", debouncedCalculatePosition);
         return () => {
-          window.removeEventListener("resize", calculatePosition);
-          window.removeEventListener("scroll", calculatePosition);
+          window.removeEventListener("resize", debouncedCalculatePosition);
+          window.removeEventListener("scroll", debouncedCalculatePosition);
         };
       }
     }
   }, [active]);
+
+  // Calculates the position of the panel when the window is resized
+  const debouncedCalculatePosition = useCallback(
+    debounce(
+      () => {
+        calculatePosition();
+      },
+      100,
+      { leading: true, trailing: false }
+    ),
+    [containerRef]
+  );
+
+  // Watches the container for changes in size, and recalculates the position
+  useEffect(() => {
+    if (!containerRef?.current) return;
+    const observer = new ResizeObserver(() => {
+      calculatePosition();
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [containerRef]);
 
   //Calculate the position for the panel to appear
   function calculatePosition() {
@@ -235,11 +261,15 @@ export default function HoverPanel({
     }
   }
 
-  // Tells the panel to play its closing animation
+  // Tells the panel to play its closing animation by using the triggerCloseAnimation prop
+  // This has to be set up in the panel component
   panel = React.isValidElement(panel)
-    ? React.cloneElement(panel as React.ReactElement<{ closing?: boolean }>, {
-        closing: closing,
-      })
+    ? React.cloneElement(
+        panel as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
+        {
+          triggerCloseAnimation: closing,
+        }
+      )
     : panel;
 
   return (
@@ -254,9 +284,12 @@ export default function HoverPanel({
       {children}
       {active && (
         <div
-          className={classNames(styles.panel)}
+          className={classNames(styles.panel, {
+            [styles.appear]: fadeEffect,
+            [styles.closing]: closing && fadeEffect,
+          })}
           ref={panelRef}
-          role={`region`}
+          role={panelRole}
           aria-label={ariaLabelPanel}
           style={{
             ...position,
