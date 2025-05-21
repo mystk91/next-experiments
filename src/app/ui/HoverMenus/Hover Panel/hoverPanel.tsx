@@ -11,7 +11,8 @@ import { debounce } from "lodash";
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
- *    shiftPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
+ *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
+ *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height, 0 to 100
  *    fadeEffect?    - plays the default fade in / out animation, default true
  *    closingTime?    - the time it takes for the panel to close, in ms
  *    panelRole?          - the role of the panel
@@ -26,7 +27,8 @@ interface HoverPanelProps {
   offset?: number;
   align?: "middle" | "top" | "right" | "left" | "bottom";
   shiftRem?: number;
-  shiftPercent?: number;
+  shiftChildPercent?: number;
+  shiftPanelPercent?: number;
   fadeEffect?: boolean;
   closingTime?: number;
   panelRole?: string;
@@ -53,7 +55,8 @@ export default function HoverPanel({
   offset = 0.0,
   align = "middle",
   shiftRem = 0.0,
-  shiftPercent = 0,
+  shiftChildPercent = 0,
+  shiftPanelPercent = 0,
   fadeEffect = true,
   ariaLabelChildren = "Expandable hover area",
   ariaLabelPanel = "Revealed panel",
@@ -167,14 +170,14 @@ export default function HoverPanel({
       // Aligns the panel to the center
       positionCopy[
         direction === "top" || direction === "bottom" ? `left` : `top`
-      ] = `${50 + shiftPercent}%`;
+      ] = `${50 + shiftChildPercent}%`;
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `X` : `Y`
       }(-50%) `;
     } else {
       // Aligns the panel to a side
       positionCopy[align] = `${
-        (align === "top" || align === "left" ? 1 : -1) * shiftPercent
+        (align === "top" || align === "left" ? 1 : -1) * shiftChildPercent
       }%`;
     }
 
@@ -183,6 +186,18 @@ export default function HoverPanel({
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `X` : `Y`
       }(${shiftRem}rem) `;
+    }
+
+    if (shiftPanelPercent) {
+      positionCopy.transform += `translate${
+        direction === "top" || direction === "bottom" ? `X` : `Y`
+      }(${
+        (shiftPanelPercent *
+          (direction === "top" || direction === "bottom"
+            ? panelRef.current?.clientWidth ?? 0
+            : panelRef.current?.clientHeight ?? 0)) /
+        1000
+      }rem) `;
     }
 
     // Moves panel if it goes outside the container's bounds

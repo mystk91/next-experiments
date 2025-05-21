@@ -8,12 +8,13 @@ import { debounce } from "lodash";
 /*  Displays a panel when you hover over an element
  *    children       - the elements which the hover event will be given to
  *    panel          - the inputed panel that will be displayed on hover
- *    portalTarget   - the ref to which the panel will be appended to
+ *    portalTargetRef - the ref to which the panel will be appended to
  *    direction      - the direction which the panel will appear
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
- *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
+ *    align?         - aligns the panel on a side of the children, flows the opposite direction, MUST be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
- *    shiftPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
+ *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
+ *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height, 0 to 100
  *    fadeEffect?    - plays the default fade in / out animation, default true
  *    closingTime?   - the time it takes for the panel to close, in ms
  *    boundaryDetection? - moves the panel if it goes out of bounds of the portalTarget, default true
@@ -24,12 +25,13 @@ import { debounce } from "lodash";
 interface HoverPanelPortalProps {
   children: React.ReactNode;
   panel: React.ReactNode;
-  portalTarget: React.RefObject<HTMLElement>;
+  portalTargetRef: React.RefObject<HTMLElement>;
   direction: "top" | "right" | "bottom" | "left";
   offset?: number;
   align?: "middle" | "top" | "right" | "left" | "bottom";
   shiftRem?: number;
-  shiftPercent?: number;
+  shiftChildPercent?: number;
+  shiftPanelPercent?: number;
   fadeEffect?: boolean;
   closingTime?: number;
   boundaryDetection?: boolean;
@@ -50,12 +52,13 @@ const positionObject = {
 export default function HoverPanelPortal({
   children,
   panel,
-  portalTarget,
+  portalTargetRef,
   direction = "bottom",
   offset = 0.0,
   align = "middle",
   shiftRem = 0.0,
-  shiftPercent = 0,
+  shiftChildPercent = 0,
+  shiftPanelPercent = 0,
   fadeEffect = true,
   closingTime = 300,
   boundaryDetection = true,
@@ -131,26 +134,26 @@ export default function HoverPanelPortal({
       100,
       { leading: true, trailing: false }
     ),
-    [portalTarget]
+    [portalTargetRef]
   );
 
   // Watches the portal target for changes in size, and recalculates the position
   useEffect(() => {
-    if (!portalTarget?.current) return;
+    if (!portalTargetRef?.current) return;
     const observer = new ResizeObserver(() => {
       calculatePosition();
     });
-    observer.observe(portalTarget.current);
+    observer.observe(portalTargetRef.current);
     return () => observer.disconnect();
-  }, [portalTarget]);
+  }, [portalTargetRef]);
 
   //Calculate the position for the panel to appear
   function calculatePosition() {
     if (
       !panelRef.current ||
       !childrenRef.current ||
-      !portalTarget ||
-      !portalTarget.current
+      !portalTargetRef ||
+      !portalTargetRef.current
     )
       return;
     const positionCopy = { ...positionObject };
@@ -179,7 +182,7 @@ export default function HoverPanelPortal({
     let panel = panelRef.current.getBoundingClientRect();
 
     const child = childrenRef.current.getBoundingClientRect();
-    const container = portalTarget.current.getBoundingClientRect();
+    const container = portalTargetRef.current.getBoundingClientRect();
 
     // Sets the anchor point of the panel
     const anchorPoints: Record<
@@ -238,15 +241,26 @@ export default function HoverPanelPortal({
     positionCopy.transform = alignments[align];
 
     //Handles the shifts
-    if (shiftPercent) {
+    if (shiftChildPercent) {
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `X` : `Y`
       }(${
         direction === "top" || direction === "bottom"
-          ? (child.width * shiftPercent) / 1000
-          : (child.height * shiftPercent) / 1000
+          ? (child.width * shiftChildPercent) / 1000
+          : (child.height * shiftChildPercent) / 1000
       }rem) `;
     }
+
+    if (shiftPanelPercent) {
+      positionCopy.transform += `translate${
+        direction === "top" || direction === "bottom" ? `X` : `Y`
+      }(${
+        direction === "top" || direction === "bottom"
+          ? (panel.width * shiftPanelPercent) / 1000
+          : (panel.height * shiftPanelPercent) / 1000
+      }rem) `;
+    }
+
     if (shiftRem) {
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `X` : `Y`
@@ -355,7 +369,7 @@ export default function HoverPanelPortal({
         {children}
       </div>
       {active &&
-        portalTarget &&
+        portalTargetRef &&
         createPortal(
           <div
             className={classNames(styles.panel, {
@@ -369,7 +383,7 @@ export default function HoverPanelPortal({
           >
             {panel}
           </div>,
-          portalTarget.current as HTMLElement
+          portalTargetRef.current as HTMLElement
         )}
     </>
   );

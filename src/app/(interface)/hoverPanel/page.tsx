@@ -52,7 +52,7 @@ export default function Page() {
         <HoverPanelPortal
           panel={<SomeCard />}
           /*
-          content={<Navbar />}
+          panel={<Navbar />}
           content={
             <Button
               text="Click Me!"
@@ -61,12 +61,13 @@ export default function Page() {
             />
           }
             */
-          direction="right"
+          direction="left"
           offset={2.0}
-          align="bottom"
+          align="middle"
           shiftRem={0}
-          shiftPercent={0}
-          portalTarget={containerRef}
+          shiftChildPercent={0}
+          shiftPanelPercent={0}
+          portalTargetRef={containerRef}
         >
           <div className={styles.card_wrapper}>
             <Card
