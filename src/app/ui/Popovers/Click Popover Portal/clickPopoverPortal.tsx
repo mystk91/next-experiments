@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import styles from "./hoverPanel.module.css";
+import styles from "./clickPopoverPortal.module.css";
 import classNames from "classnames";
 import { debounce } from "lodash";
 
-/*  Displays a panel when you hover over an element
- *    children       - the elements which the hover event will be given to
- *    panel          - the inputed panel that will be displayed on hover
+/*  Displays a popover panel when you click over an element
+ *    children       - the elements which the click event will be given to
+ *    panel          - the inputed panel that will be displayed on click
  *    portalTargetRef - the ref to which the panel will be appended to
  *    direction      - the direction which the panel will appear
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
@@ -22,7 +22,7 @@ import { debounce } from "lodash";
  *    ariaLabelChildren? - the aria label for the children
  *    ariaLabelPanel?   - the aria label for the panel
  */
-interface HoverPanelPortalProps {
+interface ClickPopoverPortalProps {
   children: React.ReactNode;
   panel: React.ReactNode;
   portalTargetRef: React.RefObject<HTMLElement>;
@@ -49,7 +49,7 @@ const positionObject = {
   transform: "",
 };
 
-export default function HoverPanelPortal({
+export default function HoverPopoverPortal({
   children,
   panel,
   portalTargetRef,
@@ -62,10 +62,10 @@ export default function HoverPanelPortal({
   fadeEffect = true,
   closingTime = 300,
   boundaryDetection = true,
-  panelRole = "region",
-  ariaLabelChildren = "Expandable hover area",
+  panelRole = "dialog",
+  ariaLabelChildren = "Click to reveal more information",
   ariaLabelPanel = "Revealed panel",
-}: HoverPanelPortalProps) {
+}: ClickPopoverPortalProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -100,27 +100,24 @@ export default function HoverPanelPortal({
     }, closingTime);
   }
 
-  // Removes the panel when the mouse leaves our hover area
-  function handleMouseLeave(e: React.MouseEvent) {
-    const target = e.relatedTarget as Node | null;
-    if (
-      (panelRef.current && panelRef.current.contains(target)) ||
-      (childrenRef.current && childrenRef.current.contains(target))
-    ) {
-      return;
+  // Remove the panel if the user clicks outside of it
+  function handleClick(e: MouseEvent) {
+    if (!panelRef.current || !panelRef.current.contains(e.target as Node)) {
+      removePanel();
     }
-    removePanel();
   }
 
   //Moves the panel to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
       calculatePosition();
+      document.addEventListener("click", handleClick);
       window.addEventListener("resize", debouncedCalculatePosition);
       window.addEventListener("scroll", debouncedCalculatePosition);
       return () => {
         window.removeEventListener("resize", debouncedCalculatePosition);
         window.removeEventListener("scroll", debouncedCalculatePosition);
+        document.removeEventListener("click", handleClick);
       };
     }
   }, [active]);
@@ -158,29 +155,22 @@ export default function HoverPanelPortal({
       return;
     const positionCopy = { ...positionObject };
 
+    const translate = {
+      x: 0,
+      y: 0,
+    };
+
     //Handles the offset
-    if (offset < 0) {
+    if (offset) {
       // Moves the panel back over the children
       positionCopy.transform += `translate${
         direction === "top" || direction === "bottom" ? `Y` : `X`
       }(${
         direction === "top" || direction === "left" ? -1 * offset : offset
       }rem) `;
-    } else {
-      // Adds space between the panel and the children
-      const oppositeDirection = {
-        top: "Bottom",
-        right: "Left",
-        bottom: "Top",
-        left: "Right",
-      }[direction];
-      positionCopy[
-        `padding${oppositeDirection}` as keyof typeof positionCopy
-      ] = `${offset}rem`;
     }
-    Object.assign(panelRef.current.style, positionCopy);
-    let panel = panelRef.current.getBoundingClientRect();
 
+    let panel = panelRef.current.getBoundingClientRect();
     const child = childrenRef.current.getBoundingClientRect();
     const container = portalTargetRef.current.getBoundingClientRect();
 
@@ -238,7 +228,7 @@ export default function HoverPanelPortal({
               10
             }rem) `,
     };
-    positionCopy.transform = alignments[align];
+    positionCopy.transform += alignments[align];
 
     //Handles the shifts
     if (shiftChildPercent) {
@@ -361,8 +351,9 @@ export default function HoverPanelPortal({
       <div
         ref={childrenRef}
         aria-expanded={active}
-        onMouseOver={addPanel}
-        onMouseLeave={handleMouseLeave}
+        onClick={() => {
+          if (!active) addPanel();
+        }}
         className={styles.expandable}
         aria-label={ariaLabelChildren}
       >
@@ -379,7 +370,6 @@ export default function HoverPanelPortal({
             ref={panelRef}
             role={panelRole}
             aria-label={ariaLabelPanel}
-            onMouseLeave={handleMouseLeave}
           >
             {panel}
           </div>,

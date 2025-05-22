@@ -1,0 +1,52 @@
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  height: max-content;
+  width: 100vw;
+}
+
+.container {
+  padding-bottom: 20rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  width: 120rem;
+  height: 120rem;
+  border: var(--smallBorder);
+  overflow: hidden;
+  position: relative;
+}
+
+.some_card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0.4rem solid var(--bwHard);
+  height: 15rem;
+  width: 40rem;
+  transform: scaleX(1) scaleY(1);
+  opacity: 1;
+  animation: appear 0.3s;
+}
+
+/*
+@keyframes appear {
+  0% {
+    transform: scaleX(0.5) scaleY(0.5) translateY(-50%);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleX(1) scaleY(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.closing {
+  transform: scaleX(0.5) scaleY(0.5) translateY(-50%);
+  opacity: 0;
+  transition: all 0.3s;
+}
+  */

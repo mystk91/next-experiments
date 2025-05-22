@@ -8,8 +8,15 @@ export default function Page() {
   return (
     <div className={styles.page}>
       <div className={styles.input_container}>
-        <TextInputWrapper label={"Username"} error={"That username is taken"} />
         <TextInputWrapper
+          id="username"
+          name="username"
+          label={"Username"}
+          error={"That username is taken"}
+        />
+        <TextInputWrapper
+          id="password"
+          name="password"
           label={"Password"}
           type="password"
           togglePassword={true}

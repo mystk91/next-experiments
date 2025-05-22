@@ -5,8 +5,8 @@ import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
 import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
-import HoverPanel from "@/app/ui/HoverMenus/Hover Panel/hoverPanel";
-import HoverPanelPortal from "@/app/ui/HoverMenus/Hover Panel Portal/hoverPanel";
+import ClickPopover from "@/app/ui/Popovers/Click Popover/clickPopover";
+import ClickPopoverPortal from "@/app/ui/Popovers/Click Popover Portal/clickPopoverPortal";
 import { useRef } from "react";
 import classNames from "classnames";
 import { useState } from "react";
@@ -33,7 +33,7 @@ export default function Page() {
 
   function changeSize() {
     timerRef.current = setInterval(() => {
-      let width = Math.floor(Math.random() * 80) + 60;
+      let width = Math.floor(Math.random() * 80) + 80;
       setWidth(width);
     }, 1000);
   }
@@ -49,7 +49,7 @@ export default function Page() {
         }}
         onClick={changeSize}
       >
-        <HoverPanelPortal
+        <ClickPopover
           panel={<SomeCard />}
           /*
           panel={<Navbar />}
@@ -61,13 +61,13 @@ export default function Page() {
             />
           }
             */
-          direction="left"
-          offset={2.0}
-          align="middle"
+          direction="bottom"
+          offset={3.0}
+          align="left"
           shiftRem={0}
           shiftChildPercent={0}
           shiftPanelPercent={0}
-          portalTargetRef={containerRef}
+          containerRef={containerRef}
         >
           <div className={styles.card_wrapper}>
             <Card
@@ -80,7 +80,7 @@ export default function Page() {
               button={<button>{"Add to Bag"}</button>}
             />
           </div>
-        </HoverPanelPortal>
+        </ClickPopover>
       </div>
     </div>
   );

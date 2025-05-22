@@ -3,13 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
-import CardChild from "@/app/ui/Cards/Tooltip as Child Test/card";
-import HoverMenuWrapper from "@/app/ui//HoverMenus/HoverMenu Wrapper/hoverMenuWrapper";
-import HoverMenuBetter from "@/app/ui/HoverMenus/HoverMenu Wrapper 2/hoverMenuWrapper";
-import HoverMenuFlexible from "@/app/ui/HoverMenus/HoverMenu Wrapper 3/hoverMenuWrapper";
 import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
-import HoverPopover from "@/app/ui/Popovers/Hover Popover/hoverPopover";
+import HoverPopover from "@/app/ui/Popovers/Hover Popover/hoverPopover"
 import HoverPopoverPortal from "@/app/ui/Popovers/Hover Popover Portal/hoverPopoverPortal";
 import { useRef } from "react";
 import classNames from "classnames";
@@ -53,10 +49,10 @@ export default function Page() {
         }}
         onClick={changeSize}
       >
-        <HoverPopoverPortal
+        <HoverPopover
           panel={<SomeCard />}
           /*
-          content={<Navbar />}
+          panel={<Navbar />}
           content={
             <Button
               text="Click Me!"
@@ -65,12 +61,13 @@ export default function Page() {
             />
           }
             */
-          direction="right"
+          direction="bottom"
           offset={2.0}
-          align="bottom"
+          align="left"
           shiftRem={0}
-          shiftChildPercent={0}
-          portalTargetRef={containerRef}
+          shiftChildPercent={10}
+          shiftPanelPercent={-25}
+          containerRef={containerRef}
         >
           <div className={styles.card_wrapper}>
             <Card
@@ -83,7 +80,7 @@ export default function Page() {
               button={<button>{"Add to Bag"}</button>}
             />
           </div>
-        </HoverPopoverPortal>
+        </HoverPopover>
       </div>
     </div>
   );
