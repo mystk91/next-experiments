@@ -8,8 +8,9 @@ import { throttle } from "lodash";
 /*  Displays a popover panel when you hover over an element
  *    children       - the elements which the hover event will be given to
  *    panel          - the inputed panel that will be displayed on hover
+ *    direction      - the direction which the panel will be anchored to
  *    portalTargetRef - the ref to which the panel will be appended to
- *    direction      - the direction which the panel will appear
+ *    anchorRef       - optional ref, panel will position itself relative to the anchorRef rather than children
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, MUST be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
@@ -25,10 +26,10 @@ import { throttle } from "lodash";
 interface HoverPopoverPortalProps {
   children: React.ReactNode;
   panel: React.ReactNode;
+  direction: Direction;
   portalTargetRef: React.RefObject<HTMLElement>;
-  direction: "top" | "right" | "bottom" | "left";
+  anchorRef?: React.RefObject<HTMLElement>;
   offset?: number;
-  align?: "middle" | "top" | "right" | "left" | "bottom";
   shiftRem?: number;
   shiftChildPercent?: number;
   shiftPanelPercent?: number;
@@ -39,6 +40,32 @@ interface HoverPopoverPortalProps {
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
 }
+
+type Side = "top" | "right" | "bottom" | "left";
+type Align = "left" | "right" | "top" | "bottom" | "middle";
+type Direction =
+  | "top"
+  | "top-left"
+  | "top-right"
+  | "bottom"
+  | "bottom-left"
+  | "bottom-right"
+  | "left"
+  | "left-top"
+  | "left-bottom"
+  | "right"
+  | "right-top"
+  | "right-bottom";
+
+// Splits the direction into a side and an alignment
+function parseDirection(direction: Direction): { side: Side; align: Align } {
+  const [side, align] = direction.split("-") as [Side, Align?];
+  return {
+    side: side,
+    align: align ?? "middle",
+  };
+}
+
 const positionObject = {
   paddingTop: "",
   paddingRight: "",
@@ -51,9 +78,9 @@ export default function HoverPopoverPortal({
   children,
   panel,
   portalTargetRef,
-  direction = "bottom",
+  anchorRef,
+  direction,
   offset = 0.0,
-  align = "middle",
   shiftRem = 0.0,
   shiftChildPercent = 0,
   shiftPanelPercent = 0,
@@ -151,9 +178,10 @@ export default function HoverPopoverPortal({
     )
       return;
     const positionCopy = { ...positionObject };
+    const { side, align } = parseDirection(direction);
 
     // Boolean to check if panel appears vertically or horizontally
-    const verticalDirection = direction === "top" || direction === "bottom";
+    const verticalDirection = side === "top" || side === "bottom";
 
     // Keeps track of our translate values
     const translates = { x: 0, y: 0 };
@@ -161,23 +189,26 @@ export default function HoverPopoverPortal({
     //Handles the offset
     if (offset < 0) {
       translates[verticalDirection ? `y` : `x`] =
-        direction === "top" || direction === "left" ? -1 * offset : offset;
+        side === "top" || side === "left" ? -1 * offset : offset;
     } else {
       // Adds space between the panel and the children
-      const oppositeDirection = {
+      const oppositeSide = {
         top: "Bottom",
         right: "Left",
         bottom: "Top",
         left: "Right",
-      }[direction];
+      }[side];
       positionCopy[
-        `padding${oppositeDirection}` as keyof typeof positionCopy
+        `padding${oppositeSide}` as keyof typeof positionCopy
       ] = `${offset}rem`;
     }
     Object.assign(panelRef.current.style, positionCopy);
     let panel = panelRef.current.getBoundingClientRect();
-
-    const child = childrenRef.current.getBoundingClientRect();
+    //Uses a different anchor element if provided (rare when using hover)
+    const child =
+      anchorRef && anchorRef.current
+        ? anchorRef.current.getBoundingClientRect()
+        : childrenRef.current.getBoundingClientRect();
     const container = portalTargetRef.current.getBoundingClientRect();
 
     // Moves the panel to the edge of the child element, in its correct vert / horz position
@@ -198,7 +229,7 @@ export default function HoverPopoverPortal({
         translates.x += (child.left - container.left - panel.width) / 10;
       },
     };
-    anchorPoints[direction]();
+    anchorPoints[side]();
 
     //Handles the alignment
     const alignments: Record<
@@ -254,7 +285,7 @@ export default function HoverPopoverPortal({
       panel = panelRef.current.getBoundingClientRect();
       if (verticalDirection) {
         //Moves panel to the bottom if it goes out of bounds to the top
-        if (direction === "top") {
+        if (side === "top") {
           if (panel.top < container.top || panel.top < -child.height / 8) {
             translates.y += (child.height + panel.height) / 10;
             if (offset < 0) {

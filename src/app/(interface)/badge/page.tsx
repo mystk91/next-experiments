@@ -5,11 +5,11 @@ import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
 import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
-import HoverPopover from "@/app/ui/Popovers/Hover Popover/hoverPopover"
-import HoverPopoverPortal from "@/app/ui/Popovers/Hover Popover Portal/hoverPopoverPortal";
+import Badge from "@/app/ui/Badges/Badge/badge";
 import { useRef } from "react";
 import classNames from "classnames";
 import { useState } from "react";
+import HoverPopover from "@/app/ui/Popovers/Hover Popover/hoverPopover";
 
 export function SomeCard({
   triggerCloseAnimation,
@@ -33,7 +33,7 @@ export default function Page() {
 
   function changeSize() {
     timerRef.current = setInterval(() => {
-      let width = Math.floor(Math.random() * 80) + 60;
+      let width = Math.floor(Math.random() * 80) + 80;
       setWidth(width);
     }, 1000);
   }
@@ -49,24 +49,21 @@ export default function Page() {
         }}
         onClick={changeSize}
       >
-        <HoverPopoverPortal
-          panel={<SomeCard />}
-          /*
-          panel={<Navbar />}
-          content={
+        <Badge
+          badge={
             <Button
-              text="Click Me!"
+              text="We can badge!"
               variant="primary"
               style={{ backgroundColor: "rgb(140, 140, 140)" }}
             />
           }
-            */
-          direction="bottom-right"
-          offset={2}
+          direction="right-top"
+          offsetRem={0}
           shiftRem={0}
-          shiftChildPercent={0}
-          shiftPanelPercent={0}
-          portalTargetRef={containerRef}
+          offsetChildrenPercent={0}
+          offsetBadgePercent={0}
+          shiftChildrenPercent={0}
+          shiftBadgePercent={0}
         >
           <div className={styles.card_wrapper}>
             <Card
@@ -79,7 +76,7 @@ export default function Page() {
               button={<button>{"Add to Bag"}</button>}
             />
           </div>
-        </HoverPopoverPortal>
+        </Badge>
       </div>
     </div>
   );
