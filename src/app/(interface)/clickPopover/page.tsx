@@ -61,12 +61,12 @@ export default function Page() {
             />
           }
             */
-          direction="bottom"
-          offset={3.0}
-          align="left"
+          direction="right"
+          offset={4.0}
+          align="top"
           shiftRem={0}
           shiftChildPercent={0}
-          shiftPanelPercent={0}
+          shiftPanelPercent={400}
           containerRef={containerRef}
         >
           <div className={styles.card_wrapper}>

@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import styles from "./clickPopoverPortal.module.css";
 import classNames from "classnames";
-import { debounce } from "lodash";
+import { throttle } from "lodash";
 
 /*  Displays a popover panel when you click over an element
  *    children       - the elements which the click event will be given to
  *    panel          - the inputed panel that will be displayed on click
  *    portalTargetRef - the ref to which the panel will be appended to
  *    direction      - the direction which the panel will appear
- *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
+ *    offset         - adds a gap between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, MUST be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
  *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
@@ -40,12 +40,6 @@ interface ClickPopoverPortalProps {
   ariaLabelPanel?: string;
 }
 const positionObject = {
-  top: "",
-  left: "",
-  paddingTop: "",
-  paddingRight: "",
-  paddingBottom: "",
-  paddingLeft: "",
   transform: "",
 };
 
@@ -112,25 +106,21 @@ export default function HoverPopoverPortal({
     if (active) {
       calculatePosition();
       document.addEventListener("click", handleClick);
-      window.addEventListener("resize", debouncedCalculatePosition);
-      window.addEventListener("scroll", debouncedCalculatePosition);
+      window.addEventListener("resize", throttledCalculatePosition);
+      window.addEventListener("scroll", throttledCalculatePosition);
       return () => {
-        window.removeEventListener("resize", debouncedCalculatePosition);
-        window.removeEventListener("scroll", debouncedCalculatePosition);
+        window.removeEventListener("resize", throttledCalculatePosition);
+        window.removeEventListener("scroll", throttledCalculatePosition);
         document.removeEventListener("click", handleClick);
       };
     }
   }, [active]);
 
   // Calculates the position of the panel when the window is resized
-  const debouncedCalculatePosition = useCallback(
-    debounce(
-      () => {
-        calculatePosition();
-      },
-      100,
-      { leading: true, trailing: false }
-    ),
+  const throttledCalculatePosition = useCallback(
+    throttle(() => {
+      calculatePosition();
+    }, 100),
     [portalTargetRef]
   );
 
@@ -155,124 +145,101 @@ export default function HoverPopoverPortal({
       return;
     const positionCopy = { ...positionObject };
 
-    const translate = {
-      x: 0,
-      y: 0,
-    };
+    // Boolean to check if panel appears vertically or horizontally
+    const verticalDirection = direction === "top" || direction === "bottom";
+
+    // Keeps track of our translate values
+    const translates = { x: 0, y: 0 };
 
     //Handles the offset
     if (offset) {
-      // Moves the panel back over the children
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `Y` : `X`
-      }(${
-        direction === "top" || direction === "left" ? -1 * offset : offset
-      }rem) `;
+      translates[verticalDirection ? `y` : `x`] =
+        direction === "top" || direction === "left" ? -1 * offset : offset;
     }
 
     let panel = panelRef.current.getBoundingClientRect();
     const child = childrenRef.current.getBoundingClientRect();
     const container = portalTargetRef.current.getBoundingClientRect();
 
-    // Sets the anchor point of the panel
+    // Moves the panel to the edge of the child element, in its correct vert / horz position
     const anchorPoints: Record<
       "top" | "right" | "bottom" | "left",
-      {
-        top: string;
-        left: string;
-      }
+      () => void
     > = {
-      top: {
-        top: `${(child.top - container.top - panel.height) / 10}rem`,
-        left: `0rem`,
+      top: () => {
+        translates.y += (child.top - container.top - panel.height) / 10;
       },
-      right: { top: `0rem`, left: `${(child.right - container.left) / 10}rem` },
-      bottom: {
-        top: `${(child.bottom - container.top) / 10}rem`,
-        left: `0rem`,
+      right: () => {
+        translates.x += (child.right - container.left) / 10;
       },
-      left: {
-        top: `0rem`,
-        left: `${(child.left - container.left - panel.width) / 10}rem`,
+      bottom: () => {
+        translates.y += (child.bottom - container.top) / 10;
+      },
+      left: () => {
+        translates.x += (child.left - container.left - panel.width) / 10;
       },
     };
-    const anchorPoint = anchorPoints[direction];
-    positionCopy.top = anchorPoint.top;
-    positionCopy.left = anchorPoint.left;
+    anchorPoints[direction]();
 
     //Handles the alignment
     const alignments: Record<
       "top" | "right" | "bottom" | "left" | "middle",
-      string
+      () => void
     > = {
-      top: `translateY(${(child.top - container.top) / 10}rem) `,
-      right: `translateX(${
-        (child.right - container.left - panel.width) / 10
-      }rem) `,
-      bottom: `translateY(${
-        (child.bottom - container.top - panel.height) / 10
-      }rem) `,
-      left: `translateX(${(child.left - container.left) / 10}rem) `,
-      middle:
-        direction === "top" || direction === "bottom"
-          ? `translateX(${
-              ((child.left + child.right) / 2 -
-                container.left -
-                panel.width / 2) /
-              10
-            }rem) `
-          : `translateY(${
-              ((child.top + child.bottom) / 2 -
-                container.top -
-                panel.height / 2) /
-              10
-            }rem) `,
+      top: () => {
+        translates.y += (child.top - container.top) / 10;
+      },
+      right: () => {
+        translates.x += (child.right - container.left - panel.width) / 10;
+      },
+      bottom: () => {
+        translates.y += (child.bottom - container.top - panel.height) / 10;
+      },
+      left: () => {
+        translates.x += (child.left - container.left) / 10;
+      },
+      middle: () => {
+        verticalDirection
+          ? (translates.x +=
+              (child.left + child.right - panel.width) / 20 -
+              container.left / 10)
+          : (translates.y +=
+              (child.top + child.bottom - panel.height) / 20 -
+              container.top / 10);
+      },
     };
-    positionCopy.transform += alignments[align];
+    alignments[align]();
 
     //Handles the shifts
     if (shiftChildPercent) {
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(${
-        direction === "top" || direction === "bottom"
-          ? (child.width * shiftChildPercent) / 1000
-          : (child.height * shiftChildPercent) / 1000
-      }rem) `;
+      translates[verticalDirection ? `x` : `y`] += verticalDirection
+        ? (child.width * shiftChildPercent) / 1000
+        : (child.height * shiftChildPercent) / 1000;
     }
 
     if (shiftPanelPercent) {
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(${
-        direction === "top" || direction === "bottom"
-          ? (panel.width * shiftPanelPercent) / 1000
-          : (panel.height * shiftPanelPercent) / 1000
-      }rem) `;
+      translates[verticalDirection ? `x` : `y`] += verticalDirection
+        ? (panel.width * shiftPanelPercent) / 1000
+        : (panel.height * shiftPanelPercent) / 1000;
     }
 
     if (shiftRem) {
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(${shiftRem}rem) `;
+      translates[verticalDirection ? `x` : `y`] += shiftRem;
     }
+
+    positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
 
     if (boundaryDetection) {
       // Moves panel if it goes outside the container's bounds
       Object.assign(panelRef.current.style, positionCopy);
       panel = panelRef.current.getBoundingClientRect();
-      if (direction === "top" || direction === "bottom") {
+      if (verticalDirection) {
         //Moves panel to the bottom if it goes out of bounds to the top
         if (direction === "top") {
           if (panel.top < container.top || panel.top < -child.height / 8) {
-            positionCopy.transform += `translateY(${
-              (child.height + panel.height) / 10
-            }rem) `;
-            if (offset < 0) {
-              positionCopy.transform += `translateY(${2 * offset}rem) `;
-            } else {
-              positionCopy.paddingTop = positionCopy.paddingBottom;
-              positionCopy.paddingBottom = ``;
+            translates.y += (child.height + panel.height) / 10;
+            if (offset) {
+              translates.y += 2 * offset;
             }
           }
         }
@@ -284,41 +251,29 @@ export default function HoverPopoverPortal({
         if (panel.left + translateX < container.left) {
           translateX = container.left - panel.left;
         }
-        positionCopy.transform += `translateX(${translateX / 10}rem)`;
+        translates.x += translateX / 10;
       } else {
         // Moves panel to the bottom if it goes out of bounds to right / left
         if (panel.left < container.left || panel.right > container.right) {
-          positionCopy.transform = ``;
-          if (offset < 0) {
-            positionCopy.transform += `translateY(${offset}rem) `;
-          } else if (offset) {
-            positionCopy.paddingLeft = ``;
-            positionCopy.paddingRight = ``;
-            positionCopy.paddingTop = `${offset}rem`;
+          translates.x = 0;
+          translates.y = 0;
+          if (offset) {
+            translates.y += offset;
           }
-
-          const anchorPoint = anchorPoints[`bottom`];
-          positionCopy.top = anchorPoint.top;
-          positionCopy.left = anchorPoint.left;
-
-          positionCopy.transform += `translateX(${
-            ((child.left + child.right) / 2 -
-              container.left -
-              panel.width / 2) /
-            10
-          }rem) `;
+          anchorPoints[`bottom`]();
+          translates.x +=
+            (child.left + child.right - panel.width) / 20 - container.left / 10;
+          positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
           Object.assign(panelRef.current.style, positionCopy);
           panel = panelRef.current.getBoundingClientRect();
-
           let translateX = 0;
-
           if (panel.right > container.right) {
             translateX = container.right - panel.right;
           }
           if (panel.left + translateX < container.left) {
             translateX = container.left - panel.left;
           }
-          positionCopy.transform += `translateX(${translateX / 10}rem) `;
+          translates.x += translateX / 10;
         } else {
           // Moves panel up / down if it goes out of bounds to top / bottom
           let translateY = 0;
@@ -328,9 +283,10 @@ export default function HoverPopoverPortal({
           if (panel.top + translateY < container.top) {
             translateY = container.top - panel.top;
           }
-          positionCopy.transform += `translateY(${translateY / 10}rem) `;
+          translates.y += translateY / 10;
         }
       }
+      positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
     }
     Object.assign(panelRef.current.style, positionCopy);
   }

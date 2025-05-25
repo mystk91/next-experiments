@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./clickPopover.module.css";
 import classNames from "classnames";
-import { debounce } from "lodash";
+import { throttle } from "lodash";
 
 /*  Displays a popover panel when you click over an element
  *    children       - the elements which the click event will be given to
  *    panel          - the inputed panel that will be displayed on click
  *    direction      - the direction which the panel will appear
- *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
+ *    offset         - adds a gap between the children and the panel, in rem (can be negative also)
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, should be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
  *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
@@ -41,10 +41,6 @@ const positionObject = {
   right: "",
   bottom: "",
   left: "",
-  paddingTop: "",
-  paddingRight: "",
-  paddingBottom: "",
-  paddingLeft: "",
   transform: "",
 };
 
@@ -113,11 +109,11 @@ export default function ClickPopover({
       calculatePosition();
       document.addEventListener("click", handleClick);
       if (containerRef) {
-        window.addEventListener("resize", debouncedCalculatePosition);
-        window.addEventListener("scroll", debouncedCalculatePosition);
+        window.addEventListener("resize", throttledCalculatePosition);
+        window.addEventListener("scroll", throttledCalculatePosition);
         return () => {
-          window.removeEventListener("resize", debouncedCalculatePosition);
-          window.removeEventListener("scroll", debouncedCalculatePosition);
+          window.removeEventListener("resize", throttledCalculatePosition);
+          window.removeEventListener("scroll", throttledCalculatePosition);
           document.removeEventListener("click", handleClick);
         };
       } else {
@@ -127,14 +123,10 @@ export default function ClickPopover({
   }, [active]);
 
   // Calculates the position of the panel when the window is resized
-  const debouncedCalculatePosition = useCallback(
-    debounce(
-      () => {
-        calculatePosition();
-      },
-      100,
-      { leading: true, trailing: false }
-    ),
+  const throttledCalculatePosition = useCallback(
+    throttle(() => {
+      calculatePosition();
+    }, 100),
     [containerRef]
   );
 
@@ -152,30 +144,32 @@ export default function ClickPopover({
   function calculatePosition() {
     const positionCopy = { ...positionObject };
 
-    //Handles the offset
+    // Boolean to check if panel appears vertically or horizontally
+    const verticalDirection = direction === "top" || direction === "bottom";
+
+    const translates = {
+      remX: 0,
+      remY: 0,
+      percentX: 0,
+      percentY: 0,
+    };
+
     if (offset) {
-      // Moves the panel back over the children
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `Y` : `X`
-      }(${
-        direction === "top" || direction === "left" ? -1 * offset : offset
-      }rem) `;
+      translates[verticalDirection ? `remY` : `remX`] +=
+        direction === "top" || direction === "left" ? -1 * offset : offset;
     }
 
     // Moves the panel to one of the sides
     positionCopy[direction] = `0rem`;
-    positionCopy.transform += `translate${
-      direction === "top" || direction === "bottom" ? `Y` : `X`
-    }(${direction === "top" || direction === "left" ? `-` : ``}100%) `;
+    translates[verticalDirection ? `percentY` : `percentX`] +=
+      direction === "top" || direction === "left" ? -100 : 100;
 
     if (align === "middle") {
       // Aligns the panel to the center
-      positionCopy[
-        direction === "top" || direction === "bottom" ? `left` : `top`
-      ] = `${50 + shiftChildPercent}%`;
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(-50%) `;
+      positionCopy[verticalDirection ? `left` : `top`] = `${
+        50 + shiftChildPercent
+      }%`;
+      translates[verticalDirection ? `percentX` : `percentY`] += -50;
     } else {
       // Aligns the panel to a side
       positionCopy[align] = `${
@@ -185,22 +179,18 @@ export default function ClickPopover({
 
     // Shifts the panel
     if (shiftRem) {
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(${shiftRem}rem) `;
+      translates[verticalDirection ? `remX` : `remY`] += shiftRem;
     }
 
     if (shiftPanelPercent) {
-      positionCopy.transform += `translate${
-        direction === "top" || direction === "bottom" ? `X` : `Y`
-      }(${
+      translates[verticalDirection ? `remX` : `remY`] +=
         (shiftPanelPercent *
-          (direction === "top" || direction === "bottom"
+          (verticalDirection
             ? panelRef.current?.clientWidth ?? 0
             : panelRef.current?.clientHeight ?? 0)) /
-        1000
-      }rem) `;
+        1000;
     }
+    positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
 
     // Moves panel if it goes outside the container's bounds
     if (containerRef) {
@@ -211,18 +201,15 @@ export default function ClickPopover({
       const container = containerRef.current.getBoundingClientRect();
       const panel = panelRef.current.getBoundingClientRect();
 
-      if (direction === "top" || direction === "bottom") {
+      if (verticalDirection) {
         //Moves panel to the bottom if it goes out of bounds to the top
         if (direction === "top") {
           if (panel.top < container.top || panel.top < -child.height / 8) {
-            positionCopy.transform += `translateY(200%) `;
+            translates[`percentY`] += 200;
             positionCopy.top = "";
             positionCopy.bottom = "0";
-            positionCopy.paddingBottom = ``;
-            if (offset < 0) {
-              positionCopy.transform += `translateY(${2 * offset}rem) `;
-            } else {
-              positionCopy.paddingTop = `${offset}rem`;
+            if (offset) {
+              translates[`remY`] += 2 * offset;
             }
           }
         }
@@ -234,22 +221,22 @@ export default function ClickPopover({
         if (panel.left + translateX < container.left) {
           translateX = container.left - panel.left;
         }
-        positionCopy.transform += `translateX(${translateX / 10}rem)`;
+        translates[`remX`] += translateX / 10;
       } else {
         // Moves panel to the bottom if it goes out of bounds to right / left
         if (panel.left < container.left || panel.right > container.right) {
           positionCopy.left = ``;
           positionCopy.right = ``;
           positionCopy.bottom = `0`;
-          positionCopy.transform = `translateY(100%) translateX(-50%) `;
+          translates[`remX`] = 0;
+          translates[`remY`] = 0;
+          translates[`percentX`] = -50;
+          translates[`percentY`] = 100;
           positionCopy[`left`] = `50%`;
-          if (offset < 0) {
-            positionCopy.transform += `translateY(${offset}rem) `;
-          } else {
-            positionCopy.paddingLeft = ``;
-            positionCopy.paddingRight = ``;
-            positionCopy.paddingTop = `${offset}rem`;
+          if (offset) {
+            translates[`remY`] += offset;
           }
+          positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
           Object.assign(panelRef.current.style, positionCopy);
           const panel = panelRef.current.getBoundingClientRect();
           let translateX = 0;
@@ -259,7 +246,7 @@ export default function ClickPopover({
           if (panel.left + translateX < container.left) {
             translateX = container.left - panel.left;
           }
-          positionCopy.transform += `translateX(${translateX / 10}rem)`;
+          translates[`remX`] += translateX / 10;
         } else {
           // Moves panel up / down if it goes out of bounds to top / bottom
           let translateY = 0;
@@ -269,9 +256,10 @@ export default function ClickPopover({
           if (panel.top + translateY < container.top) {
             translateY = container.top - panel.top;
           }
-          positionCopy.transform += `translateY(${translateY / 10}rem)`;
+          translates[`remY`] += translateY / 10;
         }
       }
+      positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
       Object.assign(panelRef.current.style, positionCopy);
     } else {
       setPosition(positionCopy);

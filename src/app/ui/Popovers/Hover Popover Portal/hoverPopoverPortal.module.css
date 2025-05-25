@@ -4,7 +4,10 @@
 
 .panel {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 500;
+  transition: opacity 0.3s;
 }
 
 .appear {
@@ -23,4 +26,5 @@
 .closing {
   opacity: 0;
   transition: opacity 0.3s;
+  transition-delay: 0.15s;
 }
