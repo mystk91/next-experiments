@@ -1,47 +1,42 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import styles from "./hoverPopoverPortal.module.css";
+import styles from "./hoverTooltipPortal.module.css";
 import classNames from "classnames";
 import { throttle } from "lodash";
 
-/*  Displays a popover panel when you hover over an element
- *    children       - the elements which the hover event will be given to
- *    panel          - the inputed panel that will be displayed on hover
- *    panelId?        - id for the panel, also used in aria-describedBy
- *    direction      - the direction which the panel will be anchored to
- *    portalTargetRef - the ref to which the panel will be appended to
- *    anchorRef       - optional ref, panel will position itself relative to the anchorRef rather than children
- *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
- *    align?         - aligns the panel on a side of the children, flows the opposite direction, MUST be perpendicular of "direction"
- *    shiftRem?      - shifts the panel in rem
- *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
- *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height
+/*  Displays a tooltip when you hover over an element
+ *    children       - the elements which the click event will be given to
+ *    tooltip          - the tooltip that will be displayed on hover
+ *    tooltipId       - id for the tooltip, used in aria
+ *    direction      - the direction which the tooltip will be anchored to
+ *    portalTargetRef - the ref to which the tooltip will be appended to
+ *    anchorRef       - optional ref, tooltip will position itself relative to the anchorRef rather than children
+ *    offset         - adds a gap between the children and the tooltip, in rem (can be negative also)
+ *    shiftRem?      - shifts the tooltip in rem
+ *    shiftChildPercent?  - shifts the tooltip, by a percent of the children's width / height
+ *    shiftTooltipPercent? - shifts the tooltip, by a percent of the tooltip's width / height
  *    fadeEffect?    - plays the default fade in / out animation, default true
- *    closingTime?   - the time it takes for the panel to close, in ms
- *    boundaryDetection? - moves the panel if it goes out of bounds of the portalTarget, default true
- *    panelRole?          - the role of the panel
+ *    closingTime?   - the time it takes for the tooltip to close, in ms
+ *    boundaryDetection? - moves the tooltip if it goes out of bounds of the portalTarget, default true
  *    ariaLabelChildren? - the aria label for the children
- *    ariaLabelPanel?   - the aria label for the panel
- *    focusable         - default true, allows panel to appear on tab navigation
+ *    focusable         - default true, allows tooltip to appear on tab navigation
  */
-interface HoverPopoverPortalProps {
+interface HoverTooltipPortalProps {
   children: React.ReactNode;
-  panel: React.ReactNode;
-  panelId?: string;
+  tooltip: React.ReactNode;
+  tooltipId: string;
   direction: Direction;
   portalTargetRef: React.RefObject<HTMLElement>;
   anchorRef?: React.RefObject<HTMLElement>;
   offset?: number;
   shiftRem?: number;
   shiftChildPercent?: number;
-  shiftPanelPercent?: number;
+  shiftTooltipPercent?: number;
   fadeEffect?: boolean;
   closingTime?: number;
   boundaryDetection?: boolean;
-  panelRole?: string;
   ariaLabelChildren?: string;
-  ariaLabelPanel?: string;
   focusable?: boolean;
 }
 
@@ -71,37 +66,31 @@ function parseDirection(direction: Direction): { side: Side; align: Align } {
 }
 
 const positionObject = {
-  paddingTop: "",
-  paddingRight: "",
-  paddingBottom: "",
-  paddingLeft: "",
   transform: "",
 };
 
-export default function HoverPopoverPortal({
+export default function HoverTooltipPortal({
   children,
-  panel,
-  panelId,
-  portalTargetRef,
-  anchorRef,
+  tooltip,
   direction,
+  portalTargetRef,
+  tooltipId,
+  anchorRef,
   offset = 0.0,
   shiftRem = 0.0,
   shiftChildPercent = 0,
-  shiftPanelPercent = 0,
+  shiftTooltipPercent = 0,
   fadeEffect = true,
   closingTime = 300,
   boundaryDetection = true,
-  panelRole = "dialog",
-  ariaLabelChildren = "Hover to reveal more information",
-  ariaLabelPanel = "Revealed panel",
+  ariaLabelChildren = "Hover to reveal tooltip",
   focusable = true,
-}: HoverPopoverPortalProps) {
+}: HoverTooltipPortalProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
 
   const childrenRef = useRef<null | HTMLDivElement>(null);
-  const panelRef = useRef<null | HTMLDivElement>(null);
+  const tooltipRef = useRef<null | HTMLDivElement>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   //Clears the timer
@@ -113,16 +102,16 @@ export default function HoverPopoverPortal({
     };
   }, []);
 
-  // Adds the panel
-  function addPanel() {
+  // Adds the tooltip
+  function addTooltip() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
     setClosing(false);
     setActive(true);
   }
-  // Removes the panel
-  function removePanel() {
+  // Removes the tooltip
+  function removeTooltip() {
     if (timerRef.current) clearTimeout(timerRef.current);
     setClosing(true);
     timerRef.current = setTimeout(() => {
@@ -131,32 +120,22 @@ export default function HoverPopoverPortal({
     }, closingTime);
   }
 
-  //Adds the panel if the child element is focused or hovered over, removes otherwise
-  function updatePanelStatus() {
-    const isChildrenFocused = focusable
+  //Adds the tooltip if the child element is focused or hovered over, removes otherwise
+  function updateTooltipStatus() {
+    const isFocused = focusable
       ? childrenRef.current?.matches(":focus-visible") ||
         !!childrenRef.current?.querySelector(":focus-visible")
       : false;
-
-    const isPanelFocused =
-      panelRef.current?.matches(":focus-visible") ||
-      !!panelRef.current?.querySelector(":focus-visible");
-
-    const isChildHovered = childrenRef.current?.matches(":hover");
-    const isPanelHovered = panelRef.current?.matches(":hover");
-    if (
-      isChildrenFocused ||
-      isPanelFocused ||
-      isChildHovered ||
-      isPanelHovered
-    ) {
-      addPanel();
+    const isHovered = childrenRef.current?.matches(":hover");
+    const isNotHovered = !tooltipRef.current?.matches(":hover");
+    if (isFocused || (isHovered && isNotHovered)) {
+      addTooltip();
     } else {
-      removePanel();
+      removeTooltip();
     }
   }
 
-  //Moves the panel to one of the sides when it becomes active, adds events for positioning
+  //Moves the tooltip to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
       calculatePosition();
@@ -169,7 +148,7 @@ export default function HoverPopoverPortal({
     }
   }, [active]);
 
-  // Calculates the position of the panel when the window is resized
+  // Calculates the position of the tooltip when the window is resized
   const throttledCalculatePosition = useCallback(
     throttle(() => {
       calculatePosition();
@@ -187,10 +166,10 @@ export default function HoverPopoverPortal({
     return () => observer.disconnect();
   }, [portalTargetRef]);
 
-  //Calculate the position for the panel to appear
+  //Calculate the position for the tooltip to appear
   function calculatePosition() {
     if (
-      !panelRef.current ||
+      !tooltipRef.current ||
       !childrenRef.current ||
       !portalTargetRef ||
       !portalTargetRef.current
@@ -199,44 +178,33 @@ export default function HoverPopoverPortal({
     const positionCopy = { ...positionObject };
     const { side, align } = parseDirection(direction);
 
-    // Boolean to check if panel appears vertically or horizontally
+    // Boolean to check if tooltip appears vertically or horizontally
     const verticalDirection = side === "top" || side === "bottom";
 
     // Keeps track of our translate values
     const translates = { x: 0, y: 0 };
 
     //Handles the offset
-    if (offset < 0) {
+    if (offset) {
       translates[verticalDirection ? `y` : `x`] =
         side === "top" || side === "left" ? -1 * offset : offset;
-    } else {
-      // Adds space between the panel and the children
-      const oppositeSide = {
-        top: "Bottom",
-        right: "Left",
-        bottom: "Top",
-        left: "Right",
-      }[side];
-      positionCopy[
-        `padding${oppositeSide}` as keyof typeof positionCopy
-      ] = `${offset}rem`;
     }
-    Object.assign(panelRef.current.style, positionCopy);
-    let panel = panelRef.current.getBoundingClientRect();
-    //Uses a different anchor element if provided (rare when using hover)
+
+    let tooltip = tooltipRef.current.getBoundingClientRect();
+    //Uses a different anchor element if provided
     const child =
       anchorRef && anchorRef.current
         ? anchorRef.current.getBoundingClientRect()
         : childrenRef.current.getBoundingClientRect();
     const container = portalTargetRef.current.getBoundingClientRect();
 
-    // Moves the panel to the edge of the child element, in its correct vert / horz position
+    // Moves the tooltip to the edge of the child element, in its correct vert / horz position
     const anchorPoints: Record<
       "top" | "right" | "bottom" | "left",
       () => void
     > = {
       top: () => {
-        translates.y += (child.top - container.top - panel.height) / 10;
+        translates.y += (child.top - container.top - tooltip.height) / 10;
       },
       right: () => {
         translates.x += (child.right - container.left) / 10;
@@ -245,7 +213,7 @@ export default function HoverPopoverPortal({
         translates.y += (child.bottom - container.top) / 10;
       },
       left: () => {
-        translates.x += (child.left - container.left - panel.width) / 10;
+        translates.x += (child.left - container.left - tooltip.width) / 10;
       },
     };
     anchorPoints[side]();
@@ -259,10 +227,10 @@ export default function HoverPopoverPortal({
         translates.y += (child.top - container.top) / 10;
       },
       right: () => {
-        translates.x += (child.right - container.left - panel.width) / 10;
+        translates.x += (child.right - container.left - tooltip.width) / 10;
       },
       bottom: () => {
-        translates.y += (child.bottom - container.top - panel.height) / 10;
+        translates.y += (child.bottom - container.top - tooltip.height) / 10;
       },
       left: () => {
         translates.x += (child.left - container.left) / 10;
@@ -270,10 +238,10 @@ export default function HoverPopoverPortal({
       middle: () => {
         verticalDirection
           ? (translates.x +=
-              (child.left + child.right - panel.width) / 20 -
+              (child.left + child.right - tooltip.width) / 20 -
               container.left / 10)
           : (translates.y +=
-              (child.top + child.bottom - panel.height) / 20 -
+              (child.top + child.bottom - tooltip.height) / 20 -
               container.top / 10);
       },
     };
@@ -286,10 +254,10 @@ export default function HoverPopoverPortal({
         : (child.height * shiftChildPercent) / 1000;
     }
 
-    if (shiftPanelPercent) {
+    if (shiftTooltipPercent) {
       translates[verticalDirection ? `x` : `y`] += verticalDirection
-        ? (panel.width * shiftPanelPercent) / 1000
-        : (panel.height * shiftPanelPercent) / 1000;
+        ? (tooltip.width * shiftTooltipPercent) / 1000
+        : (tooltip.height * shiftTooltipPercent) / 1000;
     }
 
     if (shiftRem) {
@@ -299,84 +267,78 @@ export default function HoverPopoverPortal({
     positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
 
     if (boundaryDetection) {
-      // Moves panel if it goes outside the container's bounds
-      Object.assign(panelRef.current.style, positionCopy);
-      panel = panelRef.current.getBoundingClientRect();
+      // Moves tooltip if it goes outside the container's bounds
+      Object.assign(tooltipRef.current.style, positionCopy);
+      tooltip = tooltipRef.current.getBoundingClientRect();
       if (verticalDirection) {
-        //Moves panel to the bottom if it goes out of bounds to the top
+        //Moves tooltip to the bottom if it goes out of bounds to the top
         if (side === "top") {
-          if (panel.top < container.top || panel.top < -child.height / 8) {
-            translates.y += (child.height + panel.height) / 10;
-            if (offset < 0) {
+          if (tooltip.top < container.top || tooltip.top < -child.height / 8) {
+            translates.y += (child.height + tooltip.height) / 10;
+            if (offset) {
               translates.y += 2 * offset;
-            } else {
-              positionCopy.paddingTop = positionCopy.paddingBottom;
-              positionCopy.paddingBottom = ``;
             }
           }
         }
-        // Moves panel right / left if it goes out of bounds to right / left
+        // Moves tooltip right / left if it goes out of bounds to right / left
         let translateX = 0;
-        if (panel.right > container.right) {
-          translateX = container.right - panel.right;
+        if (tooltip.right > container.right) {
+          translateX = container.right - tooltip.right;
         }
-        if (panel.left + translateX < container.left) {
-          translateX = container.left - panel.left;
+        if (tooltip.left + translateX < container.left) {
+          translateX = container.left - tooltip.left;
         }
         translates.x += translateX / 10;
       } else {
-        // Moves panel to the bottom if it goes out of bounds to right / left
-        if (panel.left < container.left || panel.right > container.right) {
+        // Moves tooltip to the bottom if it goes out of bounds to right / left
+        if (tooltip.left < container.left || tooltip.right > container.right) {
           translates.x = 0;
           translates.y = 0;
-          if (offset < 0) {
+          if (offset) {
             translates.y += offset;
-          } else if (offset) {
-            positionCopy.paddingLeft = ``;
-            positionCopy.paddingRight = ``;
-            positionCopy.paddingTop = `${offset}rem`;
           }
           anchorPoints[`bottom`]();
           translates.x +=
-            (child.left + child.right - panel.width) / 20 - container.left / 10;
+            (child.left + child.right - tooltip.width) / 20 -
+            container.left / 10;
           positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
-          Object.assign(panelRef.current.style, positionCopy);
-          panel = panelRef.current.getBoundingClientRect();
+          Object.assign(tooltipRef.current.style, positionCopy);
+          tooltip = tooltipRef.current.getBoundingClientRect();
           let translateX = 0;
-          if (panel.right > container.right) {
-            translateX = container.right - panel.right;
+          if (tooltip.right > container.right) {
+            translateX = container.right - tooltip.right;
           }
-          if (panel.left + translateX < container.left) {
-            translateX = container.left - panel.left;
+          if (tooltip.left + translateX < container.left) {
+            translateX = container.left - tooltip.left;
           }
           translates.x += translateX / 10;
         } else {
-          // Moves panel up / down if it goes out of bounds to top / bottom
+          // Moves tooltip up / down if it goes out of bounds to top / bottom
           let translateY = 0;
-          if (panel.bottom > container.bottom) {
-            translateY = container.bottom - panel.bottom;
+          if (tooltip.bottom > container.bottom) {
+            translateY = container.bottom - tooltip.bottom;
           }
-          if (panel.top + translateY < container.top) {
-            translateY = container.top - panel.top;
+          if (tooltip.top + translateY < container.top) {
+            translateY = container.top - tooltip.top;
           }
           translates.y += translateY / 10;
         }
       }
       positionCopy.transform = `translateX(${translates.x}rem) translateY(${translates.y}rem)`;
     }
-    Object.assign(panelRef.current.style, positionCopy);
+    Object.assign(tooltipRef.current.style, positionCopy);
   }
 
-  // Tells the panel to play its closing animation by using the triggerCloseAnimation prop
-  // This has to be set up in the panel component
-  panel = React.isValidElement(panel)
+  // Tells the tooltip to play its closing animation by using the triggerCloseAnimation prop
+  // This has to be set up in the tooltip component
+  tooltip = React.isValidElement(tooltip)
     ? React.cloneElement(
-        panel as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
+        tooltip as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
         {
           triggerCloseAnimation: closing,
         }
       )
-    : panel;
+    : tooltip;
 
   return (
     <>
@@ -384,13 +346,13 @@ export default function HoverPopoverPortal({
         ref={childrenRef}
         aria-expanded={active}
         tabIndex={focusable ? 0 : undefined}
-        onMouseOver={updatePanelStatus}
-        onMouseLeave={updatePanelStatus}
-        onFocus={focusable ? updatePanelStatus : undefined}
-        onBlur={() => setTimeout(updatePanelStatus, 0)}
+        onMouseEnter={updateTooltipStatus}
+        onMouseLeave={updateTooltipStatus}
+        onFocus={focusable ? updateTooltipStatus : undefined}
+        onBlur={focusable ? updateTooltipStatus : undefined}
         className={styles.expandable}
         aria-label={ariaLabelChildren}
-        aria-describedby={panelId}
+        aria-describedby={tooltipId}
       >
         {children}
       </div>
@@ -398,20 +360,15 @@ export default function HoverPopoverPortal({
         portalTargetRef &&
         createPortal(
           <div
-            className={classNames(styles.panel, {
+            className={classNames(styles.tooltip_wrapper, {
               [styles.appear]: fadeEffect,
               [styles.closing]: closing && fadeEffect,
             })}
-            ref={panelRef}
-            role={panelRole}
-            aria-label={ariaLabelPanel}
-            onMouseLeave={updatePanelStatus}
-            onBlur={
-              focusable ? () => setTimeout(updatePanelStatus, 0) : undefined
-            }
-            id={panelId}
+            ref={tooltipRef}
+            id={tooltipId}
+            tabIndex={0}
           >
-            {panel}
+            {tooltip}
           </div>,
           portalTargetRef.current as HTMLElement
         )}

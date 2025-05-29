@@ -1,40 +1,40 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import styles from "./clickPopover.module.css";
+import styles from "./hoverTooltip.module.css";
 import classNames from "classnames";
 import { throttle } from "lodash";
 
-/*  Displays a popover panel when you click over an element
- *    children       - the elements which the click event will be given to
- *    panel          - the inputed panel that will be displayed on click
- *    panelId?        - id for the panel, also used in aria-describedBy
- *    direction      - the direction which the panel will be anchored to
- *    offset         - adds a gap between the children and the panel, in rem (can be negative also)
- *    shiftRem?      - shifts the panel in rem
- *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
- *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height
+/*  Displays a tooltip when you hover over an element
+ *    children       - the elements which the hover event will be given to
+ *    tooltip          - the tooltip that will be displayed on hover
+ *    tooltipId       - id for the tooltip, used in aria
+ *    direction      - the direction which the tooltip will be anchored to
+ *    offset         - adds a gap between the children and the tooltip, in rem (can be negative also)
+ *    shiftRem?      - shifts the tooltip in rem
+ *    shiftChildPercent?  - shifts the tooltip, by a percent of the children's width / height, 0 to 100
+ *    shiftTooltipPercent? - shifts the tooltip, by a percent of the tooltip's width / height, 0 to 100
  *    fadeEffect?    - plays the default fade in / out animation, default true
- *    closingTime?    - the time it takes for the panel to close, in ms
- *    panelRole?          - the role of the panel
+ *    closingTime?    - the time it takes for the tooltip to close, in ms
+ *    tooltipRole?          - the role of the tooltip
  *    ariaLabelChildren? - the aria label for the children
- *    ariaLabelPanel?   - the aria label for the panel
- *    containerRef   - confines the panel to the boundaries of a container
+ *    ariaLabelTooltip?   - the aria label for the tooltip wrapper
+ *    containerRef   - confines the tooltip to the boundaries of a container
+ *    focusable         - default true, allows tooltip to appear on tab navigation
  */
-interface ClickPopoverProps {
+interface HoverTooltipProps {
   children: React.ReactNode;
-  panel: React.ReactNode;
-  panelId?: string;
+  tooltip: React.ReactNode;
+  tooltipId: string;
   direction: Direction;
   offset?: number;
   shiftRem?: number;
   shiftChildPercent?: number;
-  shiftPanelPercent?: number;
+  shiftTooltipPercent?: number;
   fadeEffect?: boolean;
   closingTime?: number;
-  panelRole?: string;
   ariaLabelChildren?: string;
-  ariaLabelPanel?: string;
   containerRef?: React.RefObject<HTMLElement>;
+  focusable?: boolean;
 }
 
 type Side = "top" | "right" | "bottom" | "left";
@@ -70,27 +70,26 @@ const positionObject = {
   transform: "",
 };
 
-export default function ClickPopover({
+export default function HoverTooltip({
   children,
-  panel,
-  panelId,
+  tooltip,
+  tooltipId,
   direction,
   offset = 0.0,
   shiftRem = 0.0,
   shiftChildPercent = 0,
-  shiftPanelPercent = 0,
+  shiftTooltipPercent = 0,
   fadeEffect = true,
-  ariaLabelChildren = "Click to reveal more information",
-  ariaLabelPanel = "Revealed panel",
-  panelRole = "dialog",
+  ariaLabelChildren = "Hover to reveal tooltip",
   closingTime = 300,
   containerRef,
-}: ClickPopoverProps) {
+  focusable = true,
+}: HoverTooltipProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
 
   const childrenRef = useRef<null | HTMLDivElement>(null);
-  const panelRef = useRef<null | HTMLDivElement>(null);
+  const tooltipRef = useRef<null | HTMLDivElement>(null);
 
   const [position, setPosition] = useState(positionObject);
 
@@ -104,16 +103,16 @@ export default function ClickPopover({
     };
   }, []);
 
-  // Adds the panel
-  function addPanel() {
+  // Adds the tooltip
+  function addTooltip() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
     setClosing(false);
     setActive(true);
   }
-  // Removes the panel
-  function removePanel() {
+  // Removes the tooltip
+  function removeTooltip() {
     if (timerRef.current) clearTimeout(timerRef.current);
     setClosing(true);
     timerRef.current = setTimeout(() => {
@@ -122,33 +121,37 @@ export default function ClickPopover({
     }, closingTime);
   }
 
-  // Remove the panel if the user clicks outside of it
-  function handleClick(e: MouseEvent) {
-    if (!panelRef.current || !panelRef.current.contains(e.target as Node)) {
-      removePanel();
+  //Adds the tooltip if the child element is focused or hovered over, removes otherwise
+  function updateTooltipStatus() {
+    const isFocused = focusable
+      ? childrenRef.current?.matches(":focus-visible") ||
+        !!childrenRef.current?.querySelector(":focus-visible")
+      : false;
+    const isHovered = childrenRef.current?.matches(":hover");
+    const isNotHovered = !tooltipRef.current?.matches(":hover");
+    if (isFocused || (isHovered && isNotHovered)) {
+      addTooltip();
+    } else {
+      removeTooltip();
     }
   }
 
-  //Moves the panel to one of the sides when it becomes active, adds events for positioning
+  //Moves the tooltip to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
       calculatePosition();
-      document.addEventListener("click", handleClick);
       if (containerRef) {
         window.addEventListener("resize", throttledCalculatePosition);
         window.addEventListener("scroll", throttledCalculatePosition);
         return () => {
           window.removeEventListener("resize", throttledCalculatePosition);
           window.removeEventListener("scroll", throttledCalculatePosition);
-          document.removeEventListener("click", handleClick);
         };
-      } else {
-        document.removeEventListener("click", handleClick);
       }
     }
   }, [active]);
 
-  // Calculates the position of the panel when the window is resized
+  // Calculates the position of the tooltip when the window is resized
   const throttledCalculatePosition = useCallback(
     throttle(() => {
       calculatePosition();
@@ -166,11 +169,11 @@ export default function ClickPopover({
     return () => observer.disconnect();
   }, [containerRef]);
 
-  //Calculate the position for the panel to appear
+  //Calculate the position for the tooltip to appear
   function calculatePosition() {
     const positionCopy = { ...positionObject };
     const { side, align } = parseDirection(direction);
-    // Boolean to check if panel appears vertically or horizontally
+    // Boolean to check if tooltip appears vertically or horizontally
     const verticalDirection = side === "top" || side === "bottom";
 
     const translates = {
@@ -185,48 +188,48 @@ export default function ClickPopover({
         side === "top" || side === "left" ? -1 * offset : offset;
     }
 
-    // Moves the panel to one of the sides
+    // Moves the tooltip to one of the sides
     positionCopy[side] = `0rem`;
     translates[verticalDirection ? `percentY` : `percentX`] +=
       side === "top" || side === "left" ? -100 : 100;
 
     if (align === "middle") {
-      // Aligns the panel to the center
+      // Aligns the tooltip to the center
       positionCopy[verticalDirection ? `left` : `top`] = `${
         50 + shiftChildPercent
       }%`;
       translates[verticalDirection ? `percentX` : `percentY`] += -50;
     } else {
-      // Aligns the panel to a side
+      // Aligns the tooltip to a side
       positionCopy[align] = `${
         (align === "top" || align === "left" ? 1 : -1) * shiftChildPercent
       }%`;
     }
 
-    // Shifts the panel
+    // Shifts the tooltip
     if (shiftRem) {
       translates[verticalDirection ? `remX` : `remY`] += shiftRem;
     }
 
-    if (shiftPanelPercent) {
+    if (shiftTooltipPercent) {
       translates[verticalDirection ? `percentX` : `percentY`] +=
-        shiftPanelPercent;
+        shiftTooltipPercent;
     }
     positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
 
-    // Moves panel if it goes outside the container's bounds
+    // Moves tooltip if it goes outside the container's bounds
     if (containerRef) {
-      if (!panelRef.current || !childrenRef.current || !containerRef.current)
+      if (!tooltipRef.current || !childrenRef.current || !containerRef.current)
         return;
-      Object.assign(panelRef.current.style, positionCopy);
+      Object.assign(tooltipRef.current.style, positionCopy);
       const child = childrenRef.current.getBoundingClientRect();
       const container = containerRef.current.getBoundingClientRect();
-      const panel = panelRef.current.getBoundingClientRect();
+      const tooltip = tooltipRef.current.getBoundingClientRect();
 
       if (verticalDirection) {
-        //Moves panel to the bottom if it goes out of bounds to the top
+        //Moves tooltip to the bottom if it goes out of bounds to the top
         if (side === "top") {
-          if (panel.top < container.top || panel.top < -child.height / 8) {
+          if (tooltip.top < container.top || tooltip.top < -child.height / 8) {
             translates[`percentY`] += 200;
             positionCopy.top = "";
             positionCopy.bottom = "0";
@@ -235,18 +238,18 @@ export default function ClickPopover({
             }
           }
         }
-        // Moves panel right / left if it goes out of bounds to right / left
+        // Moves tooltip right / left if it goes out of bounds to right / left
         let translateX = 0;
-        if (panel.right > container.right) {
-          translateX = container.right - panel.right;
+        if (tooltip.right > container.right) {
+          translateX = container.right - tooltip.right;
         }
-        if (panel.left + translateX < container.left) {
-          translateX = container.left - panel.left;
+        if (tooltip.left + translateX < container.left) {
+          translateX = container.left - tooltip.left;
         }
         translates[`remX`] += translateX / 10;
       } else {
-        // Moves panel to the bottom if it goes out of bounds to right / left
-        if (panel.left < container.left || panel.right > container.right) {
+        // Moves tooltip to the bottom if it goes out of bounds to right / left
+        if (tooltip.left < container.left || tooltip.right > container.right) {
           positionCopy.left = ``;
           positionCopy.right = ``;
           positionCopy.bottom = `0`;
@@ -259,73 +262,73 @@ export default function ClickPopover({
             translates[`remY`] += offset;
           }
           positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
-          Object.assign(panelRef.current.style, positionCopy);
-          const panel = panelRef.current.getBoundingClientRect();
+          Object.assign(tooltipRef.current.style, positionCopy);
+          const tooltip = tooltipRef.current.getBoundingClientRect();
           let translateX = 0;
-          if (panel.right > container.right) {
-            translateX = container.right - panel.right;
+          if (tooltip.right > container.right) {
+            translateX = container.right - tooltip.right;
           }
-          if (panel.left + translateX < container.left) {
-            translateX = container.left - panel.left;
+          if (tooltip.left + translateX < container.left) {
+            translateX = container.left - tooltip.left;
           }
           translates[`remX`] += translateX / 10;
         } else {
-          // Moves panel up / down if it goes out of bounds to top / bottom
+          // Moves tooltip up / down if it goes out of bounds to top / bottom
           let translateY = 0;
-          if (panel.bottom > container.bottom) {
-            translateY = container.bottom - panel.bottom;
+          if (tooltip.bottom > container.bottom) {
+            translateY = container.bottom - tooltip.bottom;
           }
-          if (panel.top + translateY < container.top) {
-            translateY = container.top - panel.top;
+          if (tooltip.top + translateY < container.top) {
+            translateY = container.top - tooltip.top;
           }
           translates[`remY`] += translateY / 10;
         }
       }
       positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
-      Object.assign(panelRef.current.style, positionCopy);
+      Object.assign(tooltipRef.current.style, positionCopy);
     } else {
       setPosition(positionCopy);
     }
   }
 
-  // Tells the panel to play its closing animation by using the triggerCloseAnimation prop
-  // This has to be set up in the panel component
-  panel = React.isValidElement(panel)
+  // Tells the tooltip to play its closing animation by using the triggerCloseAnimation prop
+  // This has to be set up in the tooltip component
+  tooltip = React.isValidElement(tooltip)
     ? React.cloneElement(
-        panel as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
+        tooltip as React.ReactElement<{ triggerCloseAnimation?: boolean }>,
         {
           triggerCloseAnimation: closing,
         }
       )
-    : panel;
+    : tooltip;
 
   return (
     <div
       ref={childrenRef}
       aria-expanded={active}
-      onClick={() => {
-        if (!active) addPanel();
-      }}
+      tabIndex={focusable ? 0 : undefined}
+      onMouseEnter={updateTooltipStatus}
+      onMouseLeave={updateTooltipStatus}
+      onFocus={focusable ? updateTooltipStatus : undefined}
+      onBlur={focusable ? updateTooltipStatus : undefined}
       className={styles.expandable}
       aria-label={ariaLabelChildren}
-      aria-describedby={panelId}
+      aria-describedby={tooltipId}
     >
       {children}
       {active && (
         <div
-          className={classNames(styles.panel, {
+          className={classNames(styles.tooltip_wrapper, {
             [styles.appear]: fadeEffect,
             [styles.closing]: closing && fadeEffect,
           })}
-          ref={panelRef}
-          role={panelRole}
-          aria-label={ariaLabelPanel}
+          ref={tooltipRef}
+          id={tooltipId}
           style={{
             ...position,
           }}
-          id={panelId}
         >
-          {panel}
+          {tooltip}
         </div>
       )}
     </div>

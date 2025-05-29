@@ -1,0 +1,21 @@
+.tooltip {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: max-content;
+  z-index: 100;
+}
+
+.tooltip_message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  text-wrap: balance;
+  z-index: 101;
+}
+
+.padding {
+  padding: 0.8rem 0.8rem;
+}

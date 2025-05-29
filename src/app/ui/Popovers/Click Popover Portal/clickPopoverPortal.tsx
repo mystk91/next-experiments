@@ -8,13 +8,14 @@ import { throttle } from "lodash";
 /*  Displays a popover panel when you click over an element
  *    children       - the elements which the click event will be given to
  *    panel          - the inputed panel that will be displayed on click
+ *    panelId?       - id for the panel, also used in aria-describedBy
  *    direction      - the direction which the panel will be anchored to
  *    portalTargetRef - the ref to which the panel will be appended to
  *    anchorRef       - optional ref, panel will position itself relative to the anchorRef rather than children
  *    offset         - adds a gap between the children and the panel, in rem (can be negative also)
  *    shiftRem?      - shifts the panel in rem
- *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
- *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height, 0 to 100
+ *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
+ *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height
  *    fadeEffect?    - plays the default fade in / out animation, default true
  *    closingTime?   - the time it takes for the panel to close, in ms
  *    boundaryDetection? - moves the panel if it goes out of bounds of the portalTarget, default true
@@ -25,6 +26,7 @@ import { throttle } from "lodash";
 interface ClickPopoverPortalProps {
   children: React.ReactNode;
   panel: React.ReactNode;
+  panelId?: string;
   direction: Direction;
   portalTargetRef: React.RefObject<HTMLElement>;
   anchorRef?: React.RefObject<HTMLElement>;
@@ -72,6 +74,7 @@ const positionObject = {
 export default function HoverPopoverPortal({
   children,
   panel,
+  panelId,
   direction,
   portalTargetRef,
   anchorRef,
@@ -147,7 +150,7 @@ export default function HoverPopoverPortal({
     throttle(() => {
       calculatePosition();
     }, 100),
-    [portalTargetRef]
+    []
   );
 
   // Watches the portal target for changes in size, and recalculates the position
@@ -343,6 +346,7 @@ export default function HoverPopoverPortal({
         }}
         className={styles.expandable}
         aria-label={ariaLabelChildren}
+        aria-describedby={panelId}
       >
         {children}
       </div>
@@ -357,6 +361,7 @@ export default function HoverPopoverPortal({
             ref={panelRef}
             role={panelRole}
             aria-label={ariaLabelPanel}
+            id={panelId}
           >
             {panel}
           </div>,

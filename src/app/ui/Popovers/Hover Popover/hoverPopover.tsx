@@ -7,21 +7,24 @@ import { throttle } from "lodash";
 /*  Displays a popover panel when you hover over an element
  *    children       - the elements which the hover event will be given to
  *    panel          - the inputed panel that will be displayed on hover
+ *    panelId?        - id for the panel, also used in aria-describedBy
  *    direction      - the direction which the panel will be anchored to
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
  *    shiftRem?      - shifts the panel in rem
- *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height, 0 to 100
- *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height, 0 to 100
+ *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
+ *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height
  *    fadeEffect?    - plays the default fade in / out animation, default true
  *    closingTime?    - the time it takes for the panel to close, in ms
  *    panelRole?          - the role of the panel
  *    ariaLabelChildren? - the aria label for the children
  *    ariaLabelPanel?   - the aria label for the panel
  *    containerRef   - confines the panel to the boundaries of a container
+ *    focusable         - default true, allows panel to appear on tab navigation
  */
 interface HoverPopoverProps {
   children: React.ReactNode;
   panel: React.ReactNode;
+  panelId?: string;
   direction: Direction;
   offset?: number;
   shiftRem?: number;
@@ -33,6 +36,7 @@ interface HoverPopoverProps {
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
   containerRef?: React.RefObject<HTMLElement>;
+  focusable?: boolean;
 }
 
 type Side = "top" | "right" | "bottom" | "left";
@@ -75,6 +79,7 @@ const positionObject = {
 export default function HoverPopover({
   children,
   panel,
+  panelId,
   direction,
   offset = 0.0,
   shiftRem = 0.0,
@@ -86,6 +91,7 @@ export default function HoverPopover({
   panelRole = "dialog",
   closingTime = 300,
   containerRef,
+  focusable = true,
 }: HoverPopoverProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -123,6 +129,33 @@ export default function HoverPopover({
     }, closingTime);
   }
 
+  //Adds the panel if the child element is focused or hovered over, removes otherwise
+  function updatePanelStatus() {
+    /*
+    const isChildrenFocused = focusable
+      ? childrenRef.current?.matches(":focus-visible") ||
+        !!childrenRef.current?.querySelector(":focus-visible")
+      : false;
+      */
+
+    const isPanelFocused =
+      panelRef.current?.matches(":focus-visible") ||
+      !!panelRef.current?.querySelector(":focus-visible");
+
+    const isChildHovered = childrenRef.current?.matches(":hover");
+    const isPanelHovered = panelRef.current?.matches(":hover");
+    if (
+      //isChildrenFocused ||
+      isPanelFocused ||
+      isChildHovered ||
+      isPanelHovered
+    ) {
+      addPanel();
+    } else {
+      removePanel();
+    }
+  }
+
   //Moves the panel to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
     if (active) {
@@ -143,7 +176,7 @@ export default function HoverPopover({
     throttle(() => {
       calculatePosition();
     }, 100),
-    [containerRef]
+    []
   );
 
   // Watches the container for changes in size, and recalculates the position
@@ -312,10 +345,14 @@ export default function HoverPopover({
     <div
       ref={childrenRef}
       aria-expanded={active}
-      onMouseOver={addPanel}
-      onMouseLeave={removePanel}
+      tabIndex={focusable ? 0 : undefined}
+      onMouseOver={updatePanelStatus}
+      onMouseLeave={updatePanelStatus}
+      onFocus={focusable ? updatePanelStatus : undefined}
+      onBlur={() => setTimeout(updatePanelStatus, 0)}
       className={styles.expandable}
       aria-label={ariaLabelChildren}
+      aria-describedby={panelId}
     >
       {children}
       {active && (
@@ -330,6 +367,7 @@ export default function HoverPopover({
           style={{
             ...position,
           }}
+          id={panelId}
         >
           {panel}
         </div>
