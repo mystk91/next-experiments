@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import styles from "./clickPopoverPortal.module.css";
 import classNames from "classnames";
 import { throttle } from "lodash";
-import { FocusTrap } from "focus-trap-react";
 
 /*  Displays a popover panel when you click over an element
  *    children       - the elements which the click event will be given to
@@ -23,7 +22,6 @@ import { FocusTrap } from "focus-trap-react";
  *    panelRole?          - the role of the panel
  *    ariaLabelChildren? - the aria label for the children
  *    ariaLabelPanel?   - the aria label for the panel
- *    focusable?        - default true, allows the component to be tab focused like a button
  */
 interface ClickPopoverPortalProps {
   children: React.ReactNode;
@@ -42,7 +40,6 @@ interface ClickPopoverPortalProps {
   panelRole?: string;
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
-  focusable?: boolean;
 }
 
 type Side = "top" | "right" | "bottom" | "left";
@@ -91,7 +88,6 @@ export default function HoverPopoverPortal({
   panelRole = "dialog",
   ariaLabelChildren = "Click to reveal more information",
   ariaLabelPanel = "Revealed panel",
-  focusable = true,
 }: ClickPopoverPortalProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -130,17 +126,9 @@ export default function HoverPopoverPortal({
   // Remove the panel if the user clicks outside of it
   function handleClick(e: MouseEvent) {
     if (!panelRef.current || !panelRef.current.contains(e.target as Node)) {
-      document.removeEventListener("click", handleClick);
       removePanel();
     }
   }
-
-  //Closes the panel when user hits Escape
-  const escapeKey = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      removePanel();
-    }
-  }, []);
 
   //Moves the panel to one of the sides when it becomes active, adds events for positioning
   useEffect(() => {
@@ -149,11 +137,9 @@ export default function HoverPopoverPortal({
       document.addEventListener("click", handleClick);
       window.addEventListener("resize", throttledCalculatePosition);
       window.addEventListener("scroll", throttledCalculatePosition);
-      window.addEventListener("keydown", escapeKey);
       return () => {
         window.removeEventListener("resize", throttledCalculatePosition);
         window.removeEventListener("scroll", throttledCalculatePosition);
-        window.removeEventListener("keydown", escapeKey);
         document.removeEventListener("click", handleClick);
       };
     }
@@ -355,52 +341,30 @@ export default function HoverPopoverPortal({
       <div
         ref={childrenRef}
         aria-expanded={active}
-        tabIndex={focusable ? 0 : undefined}
         onClick={() => {
           if (!active) addPanel();
         }}
         className={styles.expandable}
         aria-label={ariaLabelChildren}
         aria-describedby={panelId}
-        role="button"
-        onKeyDown={
-          focusable
-            ? (e) => {
-                if (
-                  (e.key === "Enter" || e.key === " ") &&
-                  childrenRef.current?.matches(":focus-visible")
-                ) {
-                  active && !closing ? removePanel() : addPanel();
-                }
-              }
-            : undefined
-        }
       >
         {children}
       </div>
       {active &&
         portalTargetRef &&
         createPortal(
-          <FocusTrap
-            focusTrapOptions={{
-              preventScroll: true,
-              escapeDeactivates: true,
-              clickOutsideDeactivates: true,
-            }}
+          <div
+            className={classNames(styles.panel, {
+              [styles.appear]: fadeEffect,
+              [styles.closing]: closing && fadeEffect,
+            })}
+            ref={panelRef}
+            role={panelRole}
+            aria-label={ariaLabelPanel}
+            id={panelId}
           >
-            <div
-              className={classNames(styles.panel, {
-                [styles.appear]: fadeEffect,
-                [styles.closing]: closing && fadeEffect,
-              })}
-              ref={panelRef}
-              role={panelRole}
-              aria-label={ariaLabelPanel}
-              id={panelId}
-            >
-              {panel}
-            </div>
-          </FocusTrap>,
+            {panel}
+          </div>,
           portalTargetRef.current as HTMLElement
         )}
     </>

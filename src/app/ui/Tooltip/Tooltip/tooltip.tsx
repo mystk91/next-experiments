@@ -9,9 +9,9 @@ import classNames from "classnames";
  *  children - pass in a string or a component. Only applies the arrow it its a component
  *  arrowPosition - The position of the arrow relative to the tooltip
  *  shiftPercent - Percentage to shift the arrow relative to the tooltip
- *  autoShift - default true. for edge aligned arrows, this will move the arrow inwards by 20%
+ *  autoShift - default true. on edge aligned arrows, this will move the arrow inwards by 20%
  *              If false, the edge aligned arrows will be at the edge of the tooltip and you need to move it with shiftPercent
- *  arrowSize? - Size of the arrow, in rem
+ *  arrowSize? - Length of the arrow's side, in rem. The arrow will stick out by arrowSize / 1.414 
  *  backgroundColor - Tooltip background color
  *  borderColor - Tooltip border color
  *  borderWidth - Tooltip border width, in rem

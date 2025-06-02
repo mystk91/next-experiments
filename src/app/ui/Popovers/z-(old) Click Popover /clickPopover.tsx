@@ -1,16 +1,15 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import styles from "./hoverPopover.module.css";
+import styles from "./clickPopover.module.css";
 import classNames from "classnames";
 import { throttle } from "lodash";
 
-/*  Displays a popover panel when you hover over an element
- *    children       - the elements which the hover event will be given to
- *    panel          - the inputed panel that will be displayed on hover
+/*  Displays a popover panel when you click over an element
+ *    children       - the elements which the click event will be given to
+ *    panel          - the inputed panel that will be displayed on click
  *    panelId?        - id for the panel, also used in aria-describedBy
  *    direction      - the direction which the panel will be anchored to
- *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
- *    offsetPadding? - boolean for if padding will be used to create the offset, default true
+ *    offset         - adds a gap between the children and the panel, in rem (can be negative also)
  *    shiftRem?      - shifts the panel in rem
  *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
  *    shiftPanelPercent? - shifts the panel, by a percent of the panel's width / height
@@ -20,15 +19,13 @@ import { throttle } from "lodash";
  *    ariaLabelChildren? - the aria label for the children
  *    ariaLabelPanel?   - the aria label for the panel
  *    containerRef   - confines the panel to the boundaries of a container
- *    focusable         - default true, allows panel to appear on tab navigation
  */
-interface HoverPopoverProps {
+interface ClickPopoverProps {
   children: React.ReactNode;
   panel: React.ReactNode;
   panelId?: string;
   direction: Direction;
   offset?: number;
-  offsetPadding?: boolean;
   shiftRem?: number;
   shiftChildPercent?: number;
   shiftPanelPercent?: number;
@@ -38,7 +35,6 @@ interface HoverPopoverProps {
   ariaLabelChildren?: string;
   ariaLabelPanel?: string;
   containerRef?: React.RefObject<HTMLElement>;
-  focusable?: boolean;
 }
 
 type Side = "top" | "right" | "bottom" | "left";
@@ -71,31 +67,25 @@ const positionObject = {
   right: "",
   bottom: "",
   left: "",
-  paddingTop: "",
-  paddingRight: "",
-  paddingBottom: "",
-  paddingLeft: "",
   transform: "",
 };
 
-export default function HoverPopover({
+export default function ClickPopover({
   children,
   panel,
   panelId,
   direction,
   offset = 0.0,
-  offsetPadding = true,
   shiftRem = 0.0,
   shiftChildPercent = 0,
   shiftPanelPercent = 0,
   fadeEffect = true,
-  ariaLabelChildren = "Hover to reveal more information",
+  ariaLabelChildren = "Click to reveal more information",
   ariaLabelPanel = "Revealed panel",
   panelRole = "dialog",
   closingTime = 300,
   containerRef,
-  focusable = true,
-}: HoverPopoverProps) {
+}: ClickPopoverProps) {
   const [active, setActive] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -132,27 +122,9 @@ export default function HoverPopover({
     }, closingTime);
   }
 
-  //Adds the panel if the child element is focused or hovered over, removes otherwise
-  function updatePanelStatus() {
-    const isChildrenFocused = focusable
-      ? childrenRef.current?.matches(":focus-visible") ||
-        !!childrenRef.current?.querySelector(":focus-visible")
-      : false;
-
-    const isPanelFocused =
-      panelRef.current?.matches(":focus-visible") ||
-      !!panelRef.current?.querySelector(":focus-visible");
-
-    const isChildHovered = childrenRef.current?.matches(":hover");
-    const isPanelHovered = panelRef.current?.matches(":hover");
-    if (
-      isChildrenFocused ||
-      isPanelFocused ||
-      isChildHovered ||
-      isPanelHovered
-    ) {
-      addPanel();
-    } else {
+  // Remove the panel if the user clicks outside of it
+  function handleClick(e: MouseEvent) {
+    if (!panelRef.current || !panelRef.current.contains(e.target as Node)) {
       removePanel();
     }
   }
@@ -161,13 +133,17 @@ export default function HoverPopover({
   useEffect(() => {
     if (active) {
       calculatePosition();
+      document.addEventListener("click", handleClick);
       if (containerRef) {
         window.addEventListener("resize", throttledCalculatePosition);
         window.addEventListener("scroll", throttledCalculatePosition);
         return () => {
           window.removeEventListener("resize", throttledCalculatePosition);
           window.removeEventListener("scroll", throttledCalculatePosition);
+          document.removeEventListener("click", handleClick);
         };
+      } else {
+        document.removeEventListener("click", handleClick);
       }
     }
   }, [active]);
@@ -204,21 +180,9 @@ export default function HoverPopover({
       percentY: 0,
     };
 
-    if (offset < 0 || !offsetPadding) {
-      // Adds space between the panel and the children with no padding
+    if (offset) {
       translates[verticalDirection ? `remY` : `remX`] +=
         side === "top" || side === "left" ? -1 * offset : offset;
-    } else {
-      // Adds space between the panel and the children via padding
-      const oppositeSide = {
-        top: "Bottom",
-        right: "Left",
-        bottom: "Top",
-        left: "Right",
-      }[side];
-      positionCopy[
-        `padding${oppositeSide}` as keyof typeof positionCopy
-      ] = `${offset}rem`;
     }
 
     // Moves the panel to one of the sides
@@ -266,11 +230,8 @@ export default function HoverPopover({
             translates[`percentY`] += 200;
             positionCopy.top = "";
             positionCopy.bottom = "0";
-            positionCopy.paddingBottom = ``;
-            if (offset < 0) {
+            if (offset) {
               translates[`remY`] += 2 * offset;
-            } else {
-              positionCopy.paddingTop = `${offset}rem`;
             }
           }
         }
@@ -294,12 +255,8 @@ export default function HoverPopover({
           translates[`percentX`] = -50;
           translates[`percentY`] = 100;
           positionCopy[`left`] = `50%`;
-          if (offset < 0) {
+          if (offset) {
             translates[`remY`] += offset;
-          } else {
-            positionCopy.paddingLeft = ``;
-            positionCopy.paddingRight = ``;
-            positionCopy.paddingTop = `${offset}rem`;
           }
           positionCopy.transform = `translateX(${translates.remX}rem) translateY(${translates.remY}rem) translateX(${translates.percentX}%) translateY(${translates.percentY}%)`;
           Object.assign(panelRef.current.style, positionCopy);
@@ -346,11 +303,9 @@ export default function HoverPopover({
     <div
       ref={childrenRef}
       aria-expanded={active}
-      tabIndex={focusable ? 0 : undefined}
-      onMouseOver={updatePanelStatus}
-      onMouseLeave={updatePanelStatus}
-      onFocus={focusable ? updatePanelStatus : undefined}
-      onBlur={() => setTimeout(updatePanelStatus, 0)}
+      onClick={() => {
+        if (!active) addPanel();
+      }}
       className={styles.expandable}
       aria-label={ariaLabelChildren}
       aria-describedby={panelId}

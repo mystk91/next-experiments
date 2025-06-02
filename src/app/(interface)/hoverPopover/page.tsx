@@ -62,7 +62,7 @@ export default function Page() {
         }}
         onClick={changeSize}
       >
-        <HoverPopover
+        <HoverPopoverPortal
           panel={<SomeCard />}
           /*
           panel={<Navbar />}
@@ -76,10 +76,11 @@ export default function Page() {
             */
           direction="bottom-right"
           offset={2}
+          offsetPadding={false}
           shiftRem={0}
           shiftChildPercent={0}
           shiftPanelPercent={0}
-          containerRef={containerRef}
+          portalTargetRef={containerRef}
           focusable={true}
         >
           <div className={styles.card_wrapper}>
@@ -93,7 +94,7 @@ export default function Page() {
               button={<button>{"Add to Bag"}</button>}
             />
           </div>
-        </HoverPopover>
+        </HoverPopoverPortal>
 
         <div className={styles.card_wrapper}>
           <Card
@@ -107,7 +108,7 @@ export default function Page() {
           />
         </div>
 
-        <HoverPopover
+        <HoverPopoverPortal
           panel={<SomeCard />}
           /*
           panel={<Navbar />}
@@ -124,8 +125,8 @@ export default function Page() {
           shiftRem={0}
           shiftChildPercent={0}
           shiftPanelPercent={0}
-          containerRef={containerRef}
-          focusable={false}
+          portalTargetRef={containerRef}
+          focusable={true}
         >
           <div className={styles.card_wrapper}>
             <Card
@@ -138,7 +139,7 @@ export default function Page() {
               button={<button>{"Add to Bag"}</button>}
             />
           </div>
-        </HoverPopover>
+        </HoverPopoverPortal>
       </div>
     </div>
   );

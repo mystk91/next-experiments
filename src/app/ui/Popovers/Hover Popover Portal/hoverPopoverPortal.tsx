@@ -13,6 +13,7 @@ import { throttle } from "lodash";
  *    portalTargetRef - the ref to which the panel will be appended to
  *    anchorRef       - optional ref, panel will position itself relative to the anchorRef rather than children
  *    offset         - adds a gap via padding between the children and the panel, in rem (can be negative also)
+ *    offsetPadding? - boolean for if padding will be used to create the offset, default true
  *    align?         - aligns the panel on a side of the children, flows the opposite direction, MUST be perpendicular of "direction"
  *    shiftRem?      - shifts the panel in rem
  *    shiftChildPercent?  - shifts the panel, by a percent of the children's width / height
@@ -33,6 +34,7 @@ interface HoverPopoverPortalProps {
   portalTargetRef: React.RefObject<HTMLElement>;
   anchorRef?: React.RefObject<HTMLElement>;
   offset?: number;
+  offsetPadding?: boolean;
   shiftRem?: number;
   shiftChildPercent?: number;
   shiftPanelPercent?: number;
@@ -86,6 +88,7 @@ export default function HoverPopoverPortal({
   anchorRef,
   direction,
   offset = 0.0,
+  offsetPadding = true,
   shiftRem = 0.0,
   shiftChildPercent = 0,
   shiftPanelPercent = 0,
@@ -206,7 +209,7 @@ export default function HoverPopoverPortal({
     const translates = { x: 0, y: 0 };
 
     //Handles the offset
-    if (offset < 0) {
+    if (offset < 0 || !offsetPadding) {
       translates[verticalDirection ? `y` : `x`] =
         side === "top" || side === "left" ? -1 * offset : offset;
     } else {

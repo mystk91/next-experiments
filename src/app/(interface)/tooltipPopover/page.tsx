@@ -105,7 +105,7 @@ export default function Page() {
         />
         */}
         {
-          <HoverTooltip
+          <HoverTooltipPortal
             tooltip={
               <Tooltip
                 arrowPosition="top"
@@ -127,8 +127,8 @@ export default function Page() {
             shiftRem={0}
             shiftChildPercent={0}
             shiftTooltipPercent={0}
-            containerRef={containerRef}
-            focusable={false}
+            portalTargetRef={containerRef}
+            focusable={true}
           >
             <div className={styles.card_wrapper}>
               <Card
@@ -141,7 +141,7 @@ export default function Page() {
                 button={<button>{"Add to Bag"}</button>}
               />
             </div>
-          </HoverTooltip>
+          </HoverTooltipPortal>
         }
         
 
