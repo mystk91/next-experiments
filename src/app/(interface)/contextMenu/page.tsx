@@ -3,40 +3,119 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
-import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
-import Button from "@/app/ui/Buttons/Button Set 1/button";
-import ClickPopover from "@/app/ui/Popovers/Click Popover/clickPopover";
-import ClickPopoverPortal from "@/app/ui/Popovers/Click Popover Portal/clickPopoverPortal";
+import ContextMenu from "@/app/ui/Context Menu/Context Menu/contextMenu";
+import { Item } from "@/app/ui/Context Menu/Context Menu/contextMenu";
 import { useRef } from "react";
 import classNames from "classnames";
 import { useState } from "react";
 
-export function SomeCard({
-  triggerCloseAnimation,
-}: {
-  triggerCloseAnimation?: boolean;
-}) {
-  return (
-    <div
-      className={classNames(styles.some_card, {
-        [styles.closing]: triggerCloseAnimation,
-      })}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        rowGap: "1.2rem",
-        fontSize: "1.8rem",
-      }}
-    >
-      {`These are words`}{" "}
-      <Button
-        text={`Button`}
-        variant="primary"
-        style={{ backgroundColor: "rgb(140, 140, 140)" }}
-      />
-    </div>
-  );
-}
+const menu: Item[] = [
+  {
+    type: "action",
+    label: "Open",
+    onClick: () => console.log("Open clicked"),
+  },
+  {
+    type: "action",
+    label: "Edit",
+    onClick: () => console.log("Edit clicked"),
+  },
+  {
+    type: "submenu",
+    label: "Share",
+    submenu: [
+      {
+        type: "action",
+        label: "Copy Link",
+        onClick: () => console.log("Copy Link clicked"),
+      },
+      {
+        type: "action",
+        label: "Email",
+        onClick: () => console.log("Email clicked"),
+      },
+      {
+        type: "action",
+        label: "Slack",
+        onClick: () => console.log("Shared to Slack"),
+      },
+      {
+        type: "action",
+        label: "Facebook",
+        onClick: () => console.log("Shared to Facebook"),
+      },
+      {
+        type: "decoration",
+        decoration: "line",
+      },
+      {
+        type: "submenu",
+        label: "Even More...",
+        submenu: [
+          {
+            type: "action",
+            label: "Copy Link",
+            onClick: () => console.log("Copy Link clicked"),
+          },
+          {
+            type: "action",
+            label: "Email",
+            onClick: () => console.log("Email clicked"),
+          },
+          {
+            type: "action",
+            label: "Slack",
+            onClick: () => console.log("Shared to Slack"),
+          },
+          {
+            type: "action",
+            label: "Facebook",
+            onClick: () => console.log("Shared to Facebook"),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "decoration",
+    decoration: "line",
+  },
+  {
+    type: "action",
+    label: "Download",
+    onClick: () => console.log("Download clicked"),
+  },
+  {
+    type: "submenu",
+    label: "Download as...",
+    submenu: [
+      {
+        type: "action",
+        label: "PDF",
+        onClick: () => console.log("Download as PDF"),
+      },
+      {
+        type: "action",
+        label: "PNG",
+        onClick: () => console.log("Download as PNG"),
+      },
+      {
+        type: "action",
+        label: "JPG",
+        onClick: () => console.log("Download as JPG"),
+      },
+    ],
+  },
+  {
+    type: "decoration",
+    decoration: "blank",
+  },
+  {
+    type: "action",
+    label: "Delete",
+    onClick: () => console.log("Delete clicked"),
+  },
+];
 
 export default function Page() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -60,73 +139,10 @@ export default function Page() {
           width: width ? `${width}rem` : undefined,
           transition: "width 1s",
         }}
-        onClick={changeSize}
+        onClick={() => {}}
       >
-        <ClickPopover
-          panel={<SomeCard />}
-          direction="bottom-right"
-          offset={2}
-          shiftRem={0}
-          shiftChildPercent={0}
-          shiftPanelPercent={0}
-          containerRef={containerRef}
-        >
-          <div className={styles.card_wrapper}>
-            <Card
-              height="40.0rem"
-              width="28.0rem"
-              src="/images/cards/candle.jpg"
-              alt="A lit lavender candle next to a piece of lavender and wax crystals."
-              headline="Lavender Candle"
-              description="One of the best know aromatherapy scents for relaxation is lavender. That's because lavender is a scent that naturally promotes calm. So if you had a stressful day, kick off your shoes, turn on some soothing music, and light a lavender candle. The scent will help relax you, could improve your mood, and help reduce anxiety."
-              button={<button>{"Add to Bag"}</button>}
-            />
-          </div>
-        </ClickPopover>
-
-        <div className={styles.card_wrapper}>
-          <Card
-            height="40.0rem"
-            width="28.0rem"
-            src="/images/cards/coffeeCup.png"
-            alt="A lit lavender candle next to a piece of lavender and wax crystals."
-            headline="Example"
-            description="When we hover over this card component a tooltip appears at the edge of it."
-            button={<button>{"Add to Bag"}</button>}
-          />
-        </div>
-
-        <ClickPopover
-          panel={<SomeCard />}
-          /*
-          panel={<Navbar />}
-          content={
-            <Button
-              text="Click Me!"
-              variant="primary"
-              style={{ backgroundColor: "rgb(140, 140, 140)" }}
-            />
-          }
-            */
-          direction="bottom-right"
-          offset={2}
-          shiftRem={0}
-          shiftChildPercent={0}
-          shiftPanelPercent={0}
-          containerRef={containerRef}
-        >
-          <div className={styles.card_wrapper}>
-            <Card
-              height="40.0rem"
-              width="28.0rem"
-              src="/images/cards/candle.jpg"
-              alt="A lit lavender candle next to a piece of lavender and wax crystals."
-              headline="Lavender Candle"
-              description="One of the best know aromatherapy scents for relaxation is lavender. That's because lavender is a scent that naturally promotes calm. So if you had a stressful day, kick off your shoes, turn on some soothing music, and light a lavender candle. The scent will help relax you, could improve your mood, and help reduce anxiety."
-              button={<button>{"Add to Bag"}</button>}
-            />
-          </div>
-        </ClickPopover>
+        <ContextMenu targetRef={containerRef} menu={menu} />
+        Right Click in this area to show a context menu.
       </div>
     </div>
   );
