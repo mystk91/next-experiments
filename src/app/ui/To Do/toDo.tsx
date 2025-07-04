@@ -8,7 +8,7 @@ import Button from "../Buttons/Button Set 1/button";
 import TrashIcon from "./SvgTrash";
 import CheckmarkIcon from "./SvgCheckmark";
 import { uniqueId } from "lodash";
-import Modal from "@/app/ui/Modals/Modal-1/modal";
+import Modal from "@/app/ui/Modals/Modal Versatile Portal/modal";
 
 type Task = {
   id: string;

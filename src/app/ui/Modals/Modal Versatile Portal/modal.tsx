@@ -10,6 +10,7 @@ import React, {
 import styles from "./modal.module.css";
 import { FocusTrap } from "focus-trap-react";
 import classNames from "classnames";
+import { createPortal } from "react-dom";
 
 /* A flexible modal component that displays inputed content
  * children - the content that will be on the modal
@@ -78,7 +79,7 @@ export default function Modal({
     }
   }
 
-  return (
+  return createPortal(
     <FocusTrap>
       <div
         className={classNames(styles.backdrop, {
@@ -121,6 +122,7 @@ export default function Modal({
           {children}
         </div>
       </div>
-    </FocusTrap>
+    </FocusTrap>,
+    document.getElementById("modal-root") as HTMLElement
   );
 }
