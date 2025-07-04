@@ -1,25 +1,26 @@
 @import "~normalize.css/normalize.css";
 
 :root {
-  --wb: white;
-  --bw: black;
-  --wbHard: rgb(255, 255, 255);
-  --bwHard: rgb(20, 20, 20);
-  --pageBackground: white;
-  --background: white;
-  --foreground: black;
-  --borderColor: rgb(50, 50, 50);
+  color-scheme: light dark;
+  --wb: light-dark(white, black);
+  --bw: light-dark(black, white);
+  --wbHard: light-dark(rgb(255, 255, 255), rgb(20, 20, 20));
+  --bwHard: light-dark(rgb(20, 20, 20), rgb(255, 255, 255));
+  --pageBackground: light-dark(white, rgb(30, 30, 30));
+  --background: light-dark(white, rgb(50, 50, 50));
+  --foreground: light-dark(black, white);
+  --borderColor: light-dark(rgb(50, 50, 50), white);
   --smallBorder: 0.05rem solid var(--borderColor);
-  --softBackground: rgb(245, 245, 245);
-  --softForeground: rgb(95, 95, 95);
-  --buttonBackground: rgb(240, 240, 240);
-  --buttonHoverColor: rgb(225, 225, 225);
-  --buttonActiveColor: rgb(225, 225, 225);
-  --modalBackdropColor: rgba(0, 0, 0, 0.4);
-  --linkColor: blue;
-  --iconColor: black;
-  --inputBackground: white;
-  --errorColor: brown;
+  --softBackground: light-dark(rgb(245, 245, 245), rgb(95, 95, 95));
+  --softForeground: light-dark(rgb(95, 95, 95), rgb(245, 245, 245));
+  --buttonBackground: light-dark(rgb(240, 240, 240), rgb(50, 50, 50));
+  --buttonHoverColor: light-dark(rgb(225, 225, 225), rgb(70, 70, 70));
+  --buttonActiveColor: light-dark(rgb(225, 225, 225), rgb(105, 105, 105));
+  --modalBackdropColor: light-dark(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  --linkColor: light-dark(blue, rgb(170, 170, 255));
+  --iconColor: light-dark(black, white);
+  --inputBackground: light-dark(white, rgba(40, 40, 40));
+  --errorColor: light-dark(brown, rgb(249, 105, 105));
   --navbarBackground: radial-gradient(
     circle,
     rgba(255, 255, 255, 0.2) 0%,
@@ -28,7 +29,6 @@
   );
   --navbarBackgroundColor: rgb(91, 64, 91);
   color: var(--foreground);
-  --backgroundNumbers: 255, 255, 255;
   --focusColor: rgba(47, 96, 149, 1);
   --focusOutline: 0.1rem solid var(--focusColor);
 }
@@ -48,48 +48,6 @@ svg {
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --wb: black;
-    --bw: white;
-    --wbHard: rgb(20, 20, 20);
-    --bwHard: rgb(255, 255, 255);
-    --pageBackground: rgb(30, 30, 30);
-    --background: rgb(50, 50, 50);
-    --foreground: white;
-    --borderColor: white;
-    --smallBorder: 0.05rem solid var(--borderColor);
-    --softBackground: rgb(95, 95, 95);
-    --softForeground: rgb(245, 245, 245);
-    --buttonBackground: rgb(50, 50, 50);
-    --buttonHoverColor: rgb(70, 70, 70);
-    --buttonActiveColor: rgb(105, 105, 105);
-    --modalBackdropColor: rgba(0, 0, 0, 0.2);
-    --iconColor: white;
-    --linkColor: rgb(170, 170, 255);
-    --inputBackground: rgba(40, 40, 40);
-    --errorColor: rgb(249, 105, 105);
-    color: var(--foreground);
-    --backgroundNumbers: 50, 50, 50;
-  }
-
-  input {
-    color: var(--foreground);
-    background-color: var(--background);
-  }
-
-  input::placeholder {
-    color: var(--foreground);
-  }
-
-  svg {
-    fill: var(--iconColor);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }
 
 /* Fonts*/

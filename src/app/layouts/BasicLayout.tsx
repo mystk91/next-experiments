@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
+import { ThemeProvider } from "next-themes";
 
-export const metadata: Metadata = {
-  title: "UI",
-  description: "Let's look at some UI.",
-};
-
-export default function MainLayout({
+export default function ThemeLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         style={{
           display: "flex",
@@ -20,7 +16,7 @@ export default function MainLayout({
           alignItems: "center",
         }}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

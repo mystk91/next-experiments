@@ -6,11 +6,6 @@ import Navbar from "@/app/ui/navbar/navbar";
 //import Navbar from "@/app/ui/Navbars/Descending Menu/navbar";
 import Footer from "@/app/ui/Footers/Footer 1/footer";
 
-export const metadata: Metadata = {
-  title: "Brifty",
-  description: "There's a lot of things over here now isn't there?",
-};
-
 export default function MainLayout({
   children,
 }: Readonly<{

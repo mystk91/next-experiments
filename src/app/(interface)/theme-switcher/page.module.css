@@ -1,0 +1,41 @@
+.page {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 6rem;
+}
+
+.example_wrapper {
+  border: 0.2rem solid;
+  width: min(100vw, 40rem);
+  height: 20rem;
+  border-color: light-dark(rgb(50, 50, 50), rgb(186, 180, 180));
+  background-color: light-dark(rgb(213, 214, 193), rgb(103, 107, 84));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.text_wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 75%;
+  width: 90%;
+  overflow-y: scroll;
+  font-size: 2rem;
+  color: light-dark(black, white);
+  background-color: light-dark(white, black);
+}

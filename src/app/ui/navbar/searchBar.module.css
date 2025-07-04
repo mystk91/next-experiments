@@ -61,7 +61,7 @@ button .searchIcon {
   display: flex;
   flex-direction: column;
   margin-left: 2rem;
-  width: calc(100% - 5.4rem - 2.1rem);
+  width: calc(100% - 2.1rem);
   position: absolute;
   top: 100%;
 }
@@ -75,11 +75,16 @@ button .searchIcon {
 
 .suggestion:first-child {
   border-top: 0.05rem solid var(--foreground);
+  border-top-right-radius: 2rem;
 }
 
 .suggestion {
   border-left: 0.05rem solid var(--foreground);
   border-right: 0.05rem solid var(--foreground);
+}
+
+.suggestion:first-child a {
+  border-top-right-radius: 2rem;
 }
 
 .suggestion:last-child {
@@ -108,7 +113,6 @@ button .searchIcon {
 
 .suggestion .searchIcon {
   height: 40%;
-  min-width: max-content;
 }
 
 .openButton,

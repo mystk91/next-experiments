@@ -3,6 +3,14 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import Accordian from "@/app/ui/accordian/accordian";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Accordian",
+  description: "This is a great accordian example",
+};
+
+
 export default function Page() {
   return (
     <Accordian

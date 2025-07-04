@@ -2,11 +2,6 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import { UserProvider } from "@/app/functions/context/userContext";
 
-export const metadata: Metadata = {
-  title: "Context",
-  description: "This is a context Layout",
-};
-
 //Retrieves a user from the backend (simulated)
 async function getUser() {
   await new Promise((res) => setTimeout(res, 1000));
