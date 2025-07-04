@@ -108,7 +108,7 @@ const menu: Item[] = [
   },
   {
     type: "decoration",
-    decoration: "blank",
+    decoration: "space",
   },
   {
     type: "action",

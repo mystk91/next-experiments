@@ -15,11 +15,11 @@
 }
 
 .context_menu li,
-.context_menu .blank {
+.context_menu .space {
   width: 20rem;
 }
 
-.context_menu .blank {
+.context_menu .space {
   height: 1.2rem;
 }
 
