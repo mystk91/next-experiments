@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./component.module.css";
+import classNames from "classnames";
 
 interface ComponentProps {
   style?: React.CSSProperties;
@@ -11,7 +12,7 @@ interface ComponentProps {
 export default function Component({ style }: ComponentProps) {
   const [property, setProperty] = useState<JSX.Element>(<div>Welcome!</div>);
 
-  //componentDidMount, runs when component mounts, then componentDismount
+  //componentDidMount, runs when component mounts and returns on dismount
   useEffect(() => {
     return () => {};
   }, []);
