@@ -180,7 +180,7 @@ interface ToDoProps {
   data?: {};
 }
 
-export default function Page({ user, data }: ToDoProps) {
+export default function Page() {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
@@ -569,7 +569,8 @@ export default function Page({ user, data }: ToDoProps) {
         {showForm && (
           <Modal
             closeFunction={closeNewTaskForm}
-            closeButton={true}
+            closeButton={false}
+            unstyled={false}
             closeOnBackdropClick={false}
             transparent={false}
             extraTopPadding={true}
