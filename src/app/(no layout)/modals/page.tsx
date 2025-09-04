@@ -9,7 +9,7 @@ import Button from "@/app/ui/Buttons/Button Set 1/button";
 import TrashIcon from "./SvgTrash";
 import CheckmarkIcon from "./SvgCheckmark";
 import { uniqueId } from "lodash";
-import Modal from "@/app/ui/Modals/Modal Versatile/modal";
+import Modal from "@/app/ui/Modals/Modal Versatile Portal/modal";
 
 type Task = {
   id: string;
@@ -569,7 +569,7 @@ export default function Page() {
         {showForm && (
           <Modal
             closeFunction={closeNewTaskForm}
-            closeButton={false}
+            closeButton={true}
             unstyled={false}
             closeOnBackdropClick={false}
             transparent={false}

@@ -8,8 +8,8 @@ interface AppIconProps {
   image: JSX.Element;
   notifications?: number;
   name?: string;
-  onClickIcon?: () => void;
-  onClickText?: () => void;
+  onClickIcon?: (e?: React.MouseEvent) => void;
+  onClickText?: (e?: React.MouseEvent) => void;
 }
 
 export default function AppIcon({

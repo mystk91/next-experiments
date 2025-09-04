@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
-import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
 import HoverTooltip from "@/app/ui/Popovers/Hover Tooltip/hoverTooltip";
 import HoverTooltipPortal from "@/app/ui/Popovers/Hover Tooltip Portal/hoverTooltipPortal";

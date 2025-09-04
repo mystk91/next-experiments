@@ -3,13 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Card from "@/app/ui/Cards/Tooltip Test/card";
-import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
 import ClickPopover from "@/app/ui/Popovers/Click Popover/clickPopover";
 import ClickPopoverPortal from "@/app/ui/Popovers/Click Popover Portal/clickPopoverPortal";
 import { useRef } from "react";
 import classNames from "classnames";
 import { useState } from "react";
+import { useEffect } from "react";
 
 export function SomeCard({
   triggerCloseAnimation,
@@ -51,6 +51,14 @@ export default function Page() {
     }, 1000);
   }
 
+  useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "x") {
+        changeSize();
+      }
+    });
+  });
+
   return (
     <div className={styles.page}>
       <div
@@ -60,7 +68,6 @@ export default function Page() {
           width: width ? `${width}rem` : undefined,
           transition: "width 1s",
         }}
-        onClick={changeSize}
       >
         <ClickPopover
           panel={<SomeCard />}
@@ -83,18 +90,28 @@ export default function Page() {
             />
           </div>
         </ClickPopover>
-
-        <div className={styles.card_wrapper}>
-          <Card
-            height="40.0rem"
-            width="28.0rem"
-            src="/images/cards/coffeeCup.png"
-            alt="A lit lavender candle next to a piece of lavender and wax crystals."
-            headline="Example"
-            description="When we hover over this card component a tooltip appears at the edge of it."
-            button={<button>{"Add to Bag"}</button>}
-          />
-        </div>
+        <ClickPopover
+          panel={<SomeCard />}
+          direction="top"
+          offset={2}
+          shiftRem={0}
+          shiftChildPercent={0}
+          shiftPanelPercent={0}
+          containerRef={containerRef}
+        >
+          {" "}
+          <div className={styles.card_wrapper}>
+            <Card
+              height="40.0rem"
+              width="28.0rem"
+              src="/images/cards/coffeeCup.png"
+              alt="A lit lavender candle next to a piece of lavender and wax crystals."
+              headline="Example"
+              description="When we click on this a panel appears below it"
+              button={<button>{"Add to Bag"}</button>}
+            />
+          </div>
+        </ClickPopover>
 
         <ClickPopover
           panel={<SomeCard />}

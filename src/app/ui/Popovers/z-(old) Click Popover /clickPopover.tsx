@@ -135,10 +135,8 @@ export default function ClickPopover({
       calculatePosition();
       document.addEventListener("click", handleClick);
       if (containerRef) {
-        window.addEventListener("resize", throttledCalculatePosition);
         window.addEventListener("scroll", throttledCalculatePosition);
         return () => {
-          window.removeEventListener("resize", throttledCalculatePosition);
           window.removeEventListener("scroll", throttledCalculatePosition);
           document.removeEventListener("click", handleClick);
         };

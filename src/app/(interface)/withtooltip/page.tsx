@@ -7,7 +7,6 @@ import CardChild from "@/app/ui/Cards/Tooltip as Child Test/card";
 import HoverMenuWrapper from "@/app/ui//HoverMenus/HoverMenu Wrapper/hoverMenuWrapper";
 import HoverMenuBetter from "@/app/ui/HoverMenus/HoverMenu Wrapper 2/hoverMenuWrapper";
 import HoverMenuFlexible from "@/app/ui/HoverMenus/HoverMenu Wrapper 3/hoverMenuWrapper";
-import Navbar from "@/app/ui/Navbars/Sidebar-Menu-Good-1/navbar";
 import Button from "@/app/ui/Buttons/Button Set 1/button";
 import HoverPopover from "@/app/ui/Popovers/Hover Popover/hoverPopover";
 import HoverPopoverPortal from "@/app/ui/Popovers/Hover Popover Portal/hoverPopoverPortal";
